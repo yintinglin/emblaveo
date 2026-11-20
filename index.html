@@ -1,0 +1,1377 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#16a34a">
+  <meta name="description" content="Emblaveo（aztreonam-avibactam）腎功能劑量計算器：換算 loading / maintenance 的公克劑量、支數與抽取 mL。">
+  <title>Emblaveo 劑量計算器 v261120E</title>
+  <style>
+    :root {
+      --green: #16a34a;
+      --green-dark: #166534;
+      --green-soft: #ecfdf3;
+      --blue: #2563eb;
+      --blue-dark: #1e40af;
+      --amber: #d97706;
+      --amber-dark: #92400e;
+      --ink: #172033;
+      --text: #374151;
+      --muted: #64748b;
+      --subtle: #94a3b8;
+      --line: #e3e9e6;
+      --surface: #ffffff;
+      --page: #f1f4f3;
+      --danger: #991b1b;
+      --warning: #92400e;
+      --numeric-font: ui-rounded, "SF Pro Rounded", "Segoe UI", Arial, sans-serif;
+      --ui-font: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    html {
+      font-family: var(--ui-font);
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+      background: var(--page);
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      color: var(--ink);
+      background: var(--page);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+
+    .page {
+      min-height: 100svh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: max(24px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(28px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    }
+
+    .app {
+      width: min(100%, 1080px);
+      overflow: hidden;
+      background: var(--surface);
+      border: 1px solid #dfe7e3;
+      border-radius: 20px;
+      box-shadow: 0 18px 50px -25px rgba(20, 60, 40, 0.35);
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 20px 26px;
+      background: #fbfdfc;
+      border-bottom: 1px solid #edf1ef;
+    }
+
+    .brand {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--green);
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.18);
+    }
+
+    .brand-icon svg { width: 21px; height: 21px; }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(18px, 2.6vw, 21px);
+      line-height: 1.25;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      word-break: keep-all;
+    }
+
+    .subtitle {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .version-badge {
+      flex: 0 0 auto;
+      padding: 5px 11px;
+      border: 1px solid #bbf7d0;
+      border-radius: 999px;
+      color: #15803d;
+      background: var(--green-soft);
+      font-family: var(--numeric-font);
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: 0.15px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(365px, 0.92fr) minmax(495px, 1.28fr);
+    }
+
+    .controls,
+    .results {
+      padding: 26px;
+    }
+
+    .controls { border-right: 1px solid #edf1ef; }
+
+    .section-label {
+      display: block;
+      margin: 0 0 9px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 750;
+      letter-spacing: 0.45px;
+    }
+
+    .section-label span {
+      font-weight: 450;
+      letter-spacing: 0;
+    }
+
+    .gender-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-bottom: 25px;
+    }
+
+    .workspace > * { min-width: 0; }
+    .references, .logic-notes, .dose-detail, .dose-daily { overflow-wrap: anywhere; }
+
+    .mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin-bottom: 18px;
+    }
+
+    .control-block {
+      margin-top: 22px;
+    }
+
+    .gender-button {
+      min-height: 44px;
+      padding: 9px 14px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      color: #475569;
+      background: #e8ecea;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 140ms ease, color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    .gender-button[aria-pressed="true"] {
+      color: #fff;
+      background: var(--green);
+      box-shadow: 0 3px 9px rgba(22, 163, 74, 0.22);
+    }
+
+    .gender-button:hover { border-color: #c8d2cd; }
+    .gender-button[aria-pressed="true"]:hover { border-color: #15803d; }
+
+    .gender-button:focus-visible,
+    input[type="range"]:focus-visible {
+      outline: 3px solid rgba(37, 99, 235, 0.28);
+      outline-offset: 3px;
+    }
+
+    .range-field { margin-bottom: 22px; }
+
+    .range-heading {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 4px;
+    }
+
+    .range-heading label {
+      color: var(--text);
+      font-size: 14.5px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
+
+    .range-value {
+      flex: 0 0 auto;
+      color: var(--green);
+      font-family: var(--numeric-font);
+      font-size: 27px;
+      line-height: 1;
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .range-value .unit {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .range-control {
+      position: relative;
+      padding: 1px 0;
+    }
+
+    input[type="range"] {
+      --range-progress: 50%;
+      display: block;
+      width: 100%;
+      height: 42px;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      cursor: pointer;
+      touch-action: pan-y;
+      accent-color: var(--green);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 9px;
+      border: 0;
+      border-radius: 999px;
+      background: linear-gradient(to right, var(--green) 0 var(--range-progress), #d7dfdb var(--range-progress) 100%);
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.09);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 29px;
+      height: 29px;
+      margin-top: -10px;
+      border: 4px solid #fff;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.28);
+      cursor: grab;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input[type="range"]:active::-webkit-slider-thumb { cursor: grabbing; }
+
+    input[type="range"]::-moz-range-track {
+      height: 9px;
+      border: 0;
+      border-radius: 999px;
+      background: #d7dfdb;
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.09);
+    }
+
+    input[type="range"]::-moz-range-progress {
+      height: 9px;
+      border-radius: 999px;
+      background: var(--green);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 21px;
+      height: 21px;
+      border: 4px solid #fff;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.28);
+      cursor: grab;
+    }
+
+    .range-scale {
+      display: flex;
+      justify-content: space-between;
+      margin-top: -4px;
+      color: #7c8a96;
+      font-family: var(--numeric-font);
+      font-size: 12px;
+      line-height: 1.3;
+      font-variant-numeric: tabular-nums;
+      user-select: none;
+    }
+
+    .weight-summary {
+      overflow: hidden;
+      border: 1px solid #e0e7e3;
+      border-radius: 13px;
+      background: #f7f9f8;
+    }
+
+    .weight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      text-align: center;
+    }
+
+    .weight-cell {
+      min-width: 0;
+      padding: 12px 5px;
+    }
+
+    .weight-cell + .weight-cell { border-left: 1px solid #e0e7e3; }
+
+    .weight-name {
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+      font-weight: 650;
+      letter-spacing: 0.35px;
+    }
+
+    .weight-number {
+      overflow-wrap: anywhere;
+      color: var(--text);
+      font-family: var(--numeric-font);
+      font-size: 16px;
+      line-height: 1.35;
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .formula-note {
+      padding: 10px 12px;
+      border-top: 1px solid #e0e7e3;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .crcl-display {
+      overflow: hidden;
+      margin-bottom: 22px;
+      padding: 14px 16px;
+      border: 1px solid #e0e7e3;
+      border-radius: 13px;
+      background: #f7f9f8;
+    }
+
+    .crcl-main {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .crcl-number {
+      color: var(--green-dark);
+      font-family: var(--numeric-font);
+      font-size: 24px;
+      line-height: 1.2;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .crcl-band {
+      color: var(--blue-dark);
+      font-size: 12.5px;
+      font-weight: 700;
+    }
+
+    .crcl-note {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .results {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .dose-card {
+      padding: 16px 0 15px;
+      border-top: 3px solid var(--accent);
+      border-bottom: 1px solid #edf1ef;
+    }
+
+    .dose-card.loading { --accent: var(--green); --accent-dark: var(--green-dark); }
+    .dose-card.maintenance { --accent: var(--blue); --accent-dark: var(--blue-dark); }
+    .dose-card.supplement { --accent: var(--amber); --accent-dark: var(--amber-dark); }
+
+    .dose-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 13px;
+    }
+
+    .dose-title {
+      margin: 0;
+      color: var(--accent-dark);
+      font-size: 16px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+
+    .dose-regimen {
+      margin: 2px 0 0;
+      color: var(--accent);
+      font-size: 12.5px;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+
+    .dose-values {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .dose-metric {
+      min-width: 0;
+      text-align: right;
+    }
+
+    .dose-metric:first-child { text-align: left; }
+
+    .metric-label {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+      font-weight: 650;
+    }
+
+    .metric-value {
+      display: block;
+      color: #111827;
+      font-family: var(--numeric-font);
+      font-size: 17px;
+      line-height: 1.25;
+      font-weight: 750;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .dose-metric:first-child .metric-value {
+      font-size: 29px;
+      line-height: 1;
+    }
+
+    .metric-unit {
+      margin-left: 3px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .dose-detail {
+      margin: 11px 0 0;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.6;
+    }
+
+    .dose-daily {
+      margin: 5px 0 0;
+      color: var(--text);
+      font-size: 12.5px;
+      line-height: 1.55;
+      font-weight: 600;
+    }
+
+    .alert-box {
+      display: none;
+      padding: 13px 14px;
+      border-left: 4px solid #f59e0b;
+      border-radius: 9px;
+      color: var(--warning);
+      background: #fffbeb;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .alert-box.is-visible { display: block; }
+
+    .logic-notes,
+    .references {
+      padding-top: 13px;
+      border-top: 1px solid #edf1ef;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.7;
+    }
+
+    .logic-notes p,
+    .references p { margin: 0; }
+    .logic-notes p + p,
+    .references p + p { margin-top: 4px; }
+
+    .cap-badge { display: inline-block; margin-left: 6px; padding: 2px 8px; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 11.5px; font-weight: 700; vertical-align: middle; }
+
+    .load-note { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .load-note + .load-note { margin-top: 4px; padding: 7px 10px; border-radius: 8px; background: #f5f7fb; }
+
+    .table-foot { margin: 6px 2px 0; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+    .table-prep { display: block; margin-top: 2px; color: var(--muted); font-size: 11.5px; font-weight: 650; }
+    .ref-table td:nth-child(2),
+    .ref-table td:nth-child(3) { white-space: normal; text-align: left; }
+    .ref-table th:nth-child(2),
+    .ref-table th:nth-child(3) { text-align: left; }
+
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid #e0e7e3;
+      border-radius: 11px;
+    }
+
+    .ref-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      line-height: 1.4;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ref-table th,
+    .ref-table td {
+      padding: 6px 10px;
+      text-align: right;
+      border-bottom: 1px solid #edf1ef;
+      white-space: nowrap;
+    }
+
+    .ref-table th:first-child,
+    .ref-table td:first-child {
+      text-align: left;
+      font-weight: 650;
+    }
+
+    .ref-table thead th {
+      color: var(--muted);
+      background: #f7f9f8;
+      font-weight: 700;
+      border-bottom: 1px solid #e0e7e3;
+    }
+
+    .ref-table tbody tr:nth-child(even) {
+      background: #fbfdfc;
+    }
+
+    .ref-table tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .ref-table tbody tr.is-active {
+      color: var(--green-dark);
+      background: var(--green-soft);
+      font-weight: 750;
+    }
+
+    .disclaimer {
+      padding: 16px 26px 17px;
+      border-top: 1px solid #f4d6d6;
+      color: #a11b1b;
+      background: #fff7f7;
+      font-size: 12.5px;
+      line-height: 1.65;
+    }
+
+    .disclaimer-title {
+      margin: 0 0 6px;
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .disclaimer p { margin: 0; }
+    .disclaimer p + p { margin-top: 7px; }
+
+    .footer-version {
+      color: var(--muted);
+      font-family: var(--numeric-font);
+    }
+
+    .noscript {
+      margin: 14px;
+      padding: 12px;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      color: #991b1b;
+      background: #fef2f2;
+      font-size: 14px;
+    }
+
+    @media (min-width: 961px) {
+      .page {
+        padding: max(30px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(38px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+      }
+
+      .app {
+        border-radius: 22px;
+        box-shadow: 0 22px 60px -28px rgba(20, 60, 40, 0.38);
+      }
+
+      .app-header { padding: 24px 32px; }
+      .brand { gap: 14px; }
+      .brand-icon { width: 42px; height: 42px; border-radius: 11px; }
+      .brand-icon svg { width: 23px; height: 23px; }
+      h1 { font-size: 23px; }
+      .subtitle { font-size: 14px; }
+      .version-badge { padding: 6px 12px; font-size: 13px; }
+
+      .controls,
+      .results { padding: 32px; }
+
+      .section-label { margin-bottom: 10px; font-size: 14px; }
+      .gender-switch { gap: 10px; margin-bottom: 28px; }
+      .mode-switch { gap: 10px; margin-bottom: 20px; }
+      .gender-button { min-height: 48px; font-size: 16px; }
+      .range-field { margin-bottom: 25px; }
+      .range-heading label { font-size: 15.5px; }
+      .range-value { font-size: 31px; }
+      .range-value .unit { font-size: 14px; }
+      input[type="range"] { height: 46px; }
+      input[type="range"]::-webkit-slider-runnable-track { height: 10px; }
+      input[type="range"]::-webkit-slider-thumb { width: 32px; height: 32px; margin-top: -11px; }
+      input[type="range"]::-moz-range-track,
+      input[type="range"]::-moz-range-progress { height: 10px; }
+      input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; }
+      .range-scale { font-size: 12.5px; }
+
+      .weight-cell { padding: 14px 7px; }
+      .weight-name { font-size: 12.5px; }
+      .weight-number { font-size: 17px; }
+      .formula-note { padding: 11px 13px; font-size: 12.5px; }
+
+      .results { gap: 18px; }
+      .dose-card { padding: 19px 0 18px; }
+      .dose-heading { margin-bottom: 15px; }
+      .dose-title { font-size: 17.5px; }
+      .dose-regimen { font-size: 13px; }
+      .dose-values { gap: 14px; }
+      .metric-label { font-size: 12.5px; }
+      .metric-value { font-size: 18.5px; }
+      .dose-metric:first-child .metric-value { font-size: 34px; }
+      .metric-unit { font-size: 14px; }
+      .dose-detail { margin-top: 13px; font-size: 13px; }
+      .dose-daily { font-size: 13px; }
+      .alert-box { padding: 14px 15px; font-size: 13.5px; }
+      .logic-notes, .references { padding-top: 15px; font-size: 13px; line-height: 1.75; }
+      .ref-table { font-size: 12.5px; }
+      .disclaimer { padding: 18px 32px 20px; font-size: 13px; }
+      .disclaimer-title { font-size: 13.5px; }
+    }
+
+    @media (max-width: 960px) {
+      .workspace { grid-template-columns: 1fr; }
+      .controls { border-right: 0; border-bottom: 1px solid #edf1ef; }
+    }
+
+    @media (min-width: 601px) and (max-width: 960px) {
+      .page {
+        padding: max(24px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(30px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left));
+      }
+
+      .app { width: min(100%, 780px); }
+      .app-header { padding: 22px 28px; }
+      .brand-icon { width: 40px; height: 40px; }
+      h1 { font-size: 22px; }
+      .subtitle { font-size: 13.5px; }
+      .version-badge { font-size: 13px; }
+      .controls,
+      .results { padding: 28px 30px; }
+      .section-label { font-size: 13.5px; }
+      .gender-button { min-height: 46px; font-size: 15.5px; }
+      .range-heading label { font-size: 15px; }
+      .range-value { font-size: 30px; }
+      .weight-number { font-size: 16.5px; }
+      .results { gap: 18px; }
+      .dose-title { font-size: 17px; }
+      .dose-regimen { font-size: 13px; }
+      .metric-value { font-size: 18px; }
+      .dose-metric:first-child .metric-value { font-size: 32px; }
+      .dose-detail,
+      .dose-daily,
+      .logic-notes,
+      .references { font-size: 13px; }
+      .disclaimer { padding: 17px 30px 19px; font-size: 13px; }
+    }
+
+    @media (max-width: 600px) {
+      .page { padding: 14px 10px 20px; }
+      .app { border-radius: 16px; }
+      .controls, .results { padding: 22px; }
+    }
+
+    @media (max-width: 480px) {
+      .app-header { padding: 17px 18px; }
+      .brand { gap: 10px; }
+      .brand-icon { width: 36px; height: 36px; }
+      .subtitle { font-size: 12.5px; }
+      .version-badge { padding: 4px 9px; font-size: 12px; }
+      .controls, .results { padding: 20px 18px; }
+      .dose-values { grid-template-columns: 1fr 1fr; row-gap: 12px; }
+      .dose-metric:first-child { grid-column: 1 / -1; }
+      .dose-metric:nth-child(2) { text-align: left; }
+      .dose-metric:nth-child(3) { grid-column: auto; text-align: right; }
+      .disclaimer { padding: 15px 18px 17px; }
+    }
+
+    @media (max-width: 360px) {
+      .app-header { align-items: flex-start; }
+      .version-badge { margin-top: 2px; }
+      .dose-values { grid-template-columns: 1fr 1fr; }
+      .dose-metric:first-child { grid-column: 1 / -1; }
+      .dose-metric:first-child .metric-value { font-size: 28px; }
+      .dose-metric:nth-child(2) { text-align: left; }
+    }
+
+    @media (max-width: 480px) {
+      .ref-table th, .ref-table td { padding: 6px 7px; font-size: 11.5px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+    }
+  
+    .dose-metric.dose-pair .metric-value {
+      white-space: normal;
+      font-size: 25px;
+      line-height: 1.1;
+    }
+    .prep-box {
+      margin: 12px 0 0;
+      padding: 12px 14px;
+      border: 1px solid color-mix(in srgb, var(--accent) 22%, #e0e7e3);
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--accent) 6%, #f7fbf8);
+    }
+    .prep-kicker {
+      margin: 0 0 4px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: 0.3px;
+    }
+    .prep-main {
+      color: var(--ink);
+      font-family: var(--numeric-font);
+      font-size: 18px;
+      line-height: 1.35;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+    }
+    .prep-steps {
+      margin: 6px 0 0;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .mode-note {
+      margin: -4px 0 18px;
+      color: #15803d;
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 650;
+    }
+    .effluent-switch { margin-bottom: 18px; }
+    @media (min-width: 961px) {
+      .dose-metric.dose-pair .metric-value { font-size: 28px; }
+      .prep-main { font-size: 19px; }
+    }
+    @media (max-width: 480px) {
+      .dose-metric.dose-pair .metric-value { font-size: 22px; }
+    }
+</style>
+</head>
+<body>
+  <main class="page">
+    <section class="app" aria-labelledby="app-title">
+      <header class="app-header">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3h6m-6 0v3m6-3v3M8 6h8l.6 2.2A8 8 0 0118 12.5V19a2 2 0 01-2 2H8a2 2 0 01-2-2v-6.5a8 8 0 011.4-4.3L8 6z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6" />
+            </svg>
+          </div>
+          <div>
+            <h1 id="app-title">Emblaveo 劑量計算器</h1>
+            <p class="subtitle">Aztreonam-avibactam · 依 CrCl 調整 · EU SmPC</p>
+          </div>
+        </div>
+        <span class="version-badge" aria-label="版本 v261120E">v261120E</span>
+      </header>
+
+      <div class="workspace">
+        <section class="controls" aria-label="病人參數">
+          <span class="section-label">生理性別 <span>（用於 IBW / CrCl）</span></span>
+          <div class="gender-switch" role="group" aria-label="生理性別">
+            <button type="button" id="btn-male" class="gender-button" aria-pressed="true">男性</button>
+            <button type="button" id="btn-female" class="gender-button" aria-pressed="false">女性</button>
+          </div>
+
+          <div class="range-field">
+            <div class="range-heading">
+              <label for="age-slider">年齡 Age</label>
+              <output class="range-value" for="age-slider" aria-live="polite"><span id="age-val">65</span><span class="unit"> 歲</span></output>
+            </div>
+            <div class="range-control">
+              <input type="range" id="age-slider" min="18" max="100" value="65" step="1" aria-label="年齡，歲">
+            </div>
+            <div class="range-scale" aria-hidden="true"><span>18 歲</span><span>100 歲</span></div>
+          </div>
+
+          <div class="range-field">
+            <div class="range-heading">
+              <label for="height-slider">身高 Height</label>
+              <output class="range-value" for="height-slider" aria-live="polite"><span id="height-val">165</span><span class="unit"> cm</span></output>
+            </div>
+            <div class="range-control">
+              <input type="range" id="height-slider" min="140" max="200" value="165" step="1" aria-label="身高，公分">
+            </div>
+            <div class="range-scale" aria-hidden="true"><span>140 cm</span><span>200 cm</span></div>
+          </div>
+
+          <div class="range-field">
+            <div class="range-heading">
+              <label for="weight-slider">實際體重 TBW</label>
+              <output class="range-value" for="weight-slider" aria-live="polite"><span id="weight-val">60</span><span class="unit"> kg</span></output>
+            </div>
+            <div class="range-control">
+              <input type="range" id="weight-slider" min="30" max="150" value="60" step="1" aria-label="實際體重，公斤">
+            </div>
+            <div class="range-scale" aria-hidden="true"><span>30 kg</span><span>150 kg</span></div>
+          </div>
+
+          <div class="range-field">
+            <div class="range-heading">
+              <label for="scr-slider">血清肌酸酐 SCr</label>
+              <output class="range-value" for="scr-slider" aria-live="polite"><span id="scr-val">1.0</span><span class="unit"> mg/dL</span></output>
+            </div>
+            <div class="range-control">
+              <input type="range" id="scr-slider" min="0.3" max="10.0" value="1.0" step="0.1" aria-label="血清肌酸酐，mg/dL">
+            </div>
+            <div class="range-scale" aria-hidden="true"><span>0.3 mg/dL</span><span>10.0 mg/dL</span></div>
+          </div>
+
+          <div class="weight-summary" aria-label="體重參數">
+            <div class="weight-grid">
+              <div class="weight-cell">
+                <div class="weight-name">TBW</div>
+                <div class="weight-number" id="disp-tbw">60 kg</div>
+              </div>
+              <div class="weight-cell">
+                <div class="weight-name">IBW</div>
+                <div class="weight-number" id="disp-ibw">61.5 kg</div>
+              </div>
+              <div class="weight-cell">
+                <div class="weight-name">ABW</div>
+                <div class="weight-number" id="disp-abw">60.9 kg</div>
+              </div>
+            </div>
+            <div class="formula-note">IBW：Devine formula · ABW = IBW + 0.4 × (TBW − IBW)。成人劑量不依體重調整，體重僅用於計算 CrCl。</div>
+          </div>
+
+          <div class="control-block">
+            <span class="section-label">腎功能 / 透析模式</span>
+            <div class="mode-switch" role="group" aria-label="腎功能 / 透析模式">
+              <button type="button" id="mode-cg" class="gender-button" aria-pressed="true">CG 計算</button>
+              <button type="button" id="mode-manual" class="gender-button" aria-pressed="false">手動 CrCl</button>
+              <button type="button" id="mode-ihd" class="gender-button" aria-pressed="false">iHD</button>
+              <button type="button" id="mode-crrt" class="gender-button" aria-pressed="false">CRRT</button>
+            </div>
+          </div>
+
+          <div id="manual-field" class="range-field" hidden>
+            <div class="range-heading">
+              <label for="manual-crcl-slider">手動 CrCl</label>
+              <output class="range-value" for="manual-crcl-slider" aria-live="polite"><span id="manual-crcl-val">60</span><span class="unit"> mL/min</span></output>
+            </div>
+            <div class="range-control">
+              <input type="range" id="manual-crcl-slider" min="0" max="150" value="60" step="1" aria-label="手動 CrCl，mL/min">
+            </div>
+            <div class="range-scale" aria-hidden="true"><span>0 mL/min</span><span>150 mL/min</span></div>
+          </div>
+
+          <div id="ihd-field" hidden>
+            <p class="mode-note">透析日應於血液透析結束後給藥（ATM、AVI 均可被透析清除）。仿單未另外規定透析後補充劑量。</p>
+          </div>
+
+          <div id="crrt-field" hidden>
+            <span class="section-label">CRRT 流出液流速 effluent flow</span>
+            <div class="mode-switch effluent-switch" role="group" aria-label="CRRT 流出液流速">
+              <button type="button" id="eff-low" class="gender-button" aria-pressed="true">1–2 L/h</button>
+              <button type="button" id="eff-high" class="gender-button" aria-pressed="false">3–5 L/h</button>
+            </div>
+            <p class="mode-note">仿單 Table 3 僅列出這兩段流速，作為無殘餘腎功能時的初始劑量。</p>
+          </div>
+
+          <div class="crcl-display" aria-label="腎功能分級摘要">
+            <div class="crcl-main">
+              <div class="crcl-number" id="crcl-value">62.5 mL/min</div>
+              <div class="crcl-band" id="band-label">CrCl &gt; 50 mL/min</div>
+            </div>
+            <p class="crcl-note" id="crcl-note">依 Cockcroft-Gault 計算</p>
+          </div>
+        </section>
+
+        <section class="results" aria-label="劑量結果" aria-live="polite">
+          <article class="dose-card loading">
+            <div class="dose-heading">
+              <div>
+                <h2 class="dose-title">起始 Loading</h2>
+                <p class="dose-regimen" id="load-regimen">輸注 3 小時</p>
+              </div>
+            </div>
+            <div class="dose-values">
+              <div class="dose-metric dose-pair">
+                <span class="metric-label">Aztreonam / Avibactam</span>
+                <span class="metric-value" id="load-dose">2 g / 0.67 g</span>
+              </div>
+              <div class="dose-metric">
+                <span class="metric-label">需開支數</span>
+                <span class="metric-value"><span id="load-vial">2</span><span class="metric-unit">vial</span></span>
+              </div>
+              <div class="dose-metric">
+                <span class="metric-label">抽取量</span>
+                <span class="metric-value" id="load-ml">15.2 mL</span>
+              </div>
+            </div>
+            <div class="prep-box" id="load-prep"></div>
+          </article>
+
+          <article class="dose-card maintenance">
+            <div class="dose-heading">
+              <div>
+                <h2 class="dose-title">維持 Maintenance</h2>
+                <p class="dose-regimen" id="maint-regimen">輸注 3 小時 · 每 6 小時</p>
+              </div>
+            </div>
+            <div class="dose-values">
+              <div class="dose-metric dose-pair">
+                <span class="metric-label">Aztreonam / Avibactam</span>
+                <span class="metric-value" id="maint-dose">1.5 g / 0.5 g</span>
+              </div>
+              <div class="dose-metric">
+                <span class="metric-label">需開支數</span>
+                <span class="metric-value"><span id="maint-vial">1</span><span class="metric-unit">vial</span></span>
+              </div>
+              <div class="dose-metric">
+                <span class="metric-label">抽取量</span>
+                <span class="metric-value" id="maint-ml">11.4 mL</span>
+              </div>
+            </div>
+            <div class="prep-box" id="maint-prep"></div>
+            <p class="dose-daily" id="maint-daily"></p>
+          </article>
+
+          <div id="alert-box" class="alert-box" role="status"></div>
+
+          <div id="logic-notes" class="logic-notes">
+            <p>・<strong>1 vial = aztreonam 1.5 g + avibactam 0.5 g</strong>。以 <strong>10 mL</strong> 注射用滅菌水復溶後，濃度為 ATM <strong>131.2 mg/mL</strong>、AVI <strong>43.7 mg/mL</strong>（EU SmPC）。抽取後再稀釋至點滴袋 50–250 mL（0.9% NaCl、5% glucose 或 Lactated Ringer's），輸注 3 小時。</p>
+            <p>・單支僅限單次使用，餘量棄去；開始復溶至完成點滴袋調製不得超過 30 分鐘。</p>
+            <p>・Maintenance 於 loading 後的下一個給藥間隔開始（q6h / q8h / q12h，間隔自輸注開始時起算）。成人劑量依 Cockcroft-Gault CrCl，不依體重或年齡另外調整。</p>
+            <p>・CrCl：Cockcroft-Gault，使用 ABW（TBW &lt; IBW 時用 TBW）。複雜腹腔感染若懷疑厭氧菌，應併用 metronidazole。</p>
+          </div>
+
+          <div id="dose-table"></div>
+
+          <div id="references" class="references">
+            <p class="references-title"><strong>參考資料 References</strong></p>
+            <p>1. EMA. Emblaveo EPAR Product Information（SmPC）。Table 1–2 腎功能劑量、Table 3 CRRT、section 6.6 / Table 5 復溶與抽取量。首次核准 2024-04-22；本頁依 2026-11-20 下載之現行英文 SmPC。<a href="https://www.ema.europa.eu/en/documents/product-information/emblaveo-epar-product-information_en.pdf" target="_blank" rel="noopener">EMA PDF</a></p>
+            <p>2. US FDA Prescribing Information / DailyMed（對照用，非本頁給藥依據）。ATM/AVI 公克劑量與間隔相同，但復溶濃度標示為 127 mg/mL（約 12 mL），抽取量不同；且未列出 CRRT Table 3。<a href="https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=be1a6c99-d4b3-46d7-9e99-6e5f9fab556a" target="_blank" rel="noopener">DailyMed</a></p>
+          </div>
+        </section>
+      </div>
+
+      <footer class="disclaimer">
+        <p class="disclaimer-title">⚠️ 免責聲明 / Disclaimer</p>
+        <p>本工具僅供醫療專業人員參考，不能取代臨床判斷與藥師核對；給藥前請依院內規範與現行仿單確認。抽取量依歐盟仿單計算（台灣沿用歐盟產品），請勿改用美國仿單的 mL 數。</p>
+        <p class="footer-version"><strong>版本：</strong>v261120E</p>
+      </footer>
+
+      <noscript><div class="noscript">此計算器需要啟用 JavaScript 才能更新劑量。</div></noscript>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+
+      // ===== Emblaveo (ATM-AVI) dosing core — pure functions, no DOM =====
+      const APP_VERSION = 'v261120E';
+      const ATM_MG_PER_ML = 131.2; // EU SmPC after 10 mL SWFI
+      const AVI_MG_PER_ML = 43.7;
+      const VIAL_ATM_MG = 1500;
+      const VIAL_AVI_MG = 500;
+      // Official Table 5 volume for a full 1500/500 mg vial
+      const FULL_VIAL_ML = 11.4;
+
+      // Official EU SmPC Table 5 listed withdraw volumes. 1000/333 mg is not listed
+      // and is calculated as atmMg / 131.2, rounded to 1 decimal like the table.
+      const PREP = {
+        2000: { atmMg: 2000, aviMg: 667, aviLabel: '0.67 g', atmLabel: '2 g', withdrawMl: 15.2, vials: 2, listed: true },
+        1500: { atmMg: 1500, aviMg: 500, aviLabel: '0.5 g', atmLabel: '1.5 g', withdrawMl: 11.4, vials: 1, listed: true },
+        1350: { atmMg: 1350, aviMg: 450, aviLabel: '0.45 g', atmLabel: '1.35 g', withdrawMl: 10.3, vials: 1, listed: true },
+        1000: { atmMg: 1000, aviMg: 333, aviLabel: '0.33 g', atmLabel: '1 g', withdrawMl: Math.round((1000 / ATM_MG_PER_ML) * 10) / 10, vials: 1, listed: false },
+        750:  { atmMg: 750,  aviMg: 250, aviLabel: '0.25 g', atmLabel: '0.75 g', withdrawMl: 5.7, vials: 1, listed: true },
+        675:  { atmMg: 675,  aviMg: 225, aviLabel: '0.225 g', atmLabel: '0.675 g', withdrawMl: 5.1, vials: 1, listed: true }
+      };
+
+      const CRCL_BANDS = [
+        { key: '>50', min: 50, max: Infinity, exclusiveMin: true, label: 'CrCl > 50 mL/min', loadingAtm: 2000, maintAtm: 1500, intervalH: 6 },
+        { key: '30-50', min: 30, max: 50, exclusiveMin: true, label: 'CrCl > 30 且 ≤ 50 mL/min', loadingAtm: 2000, maintAtm: 750, intervalH: 6 },
+        { key: '15-30', min: 15, max: 30, exclusiveMin: true, label: 'CrCl > 15 且 ≤ 30 mL/min', loadingAtm: 1350, maintAtm: 675, intervalH: 8 },
+        { key: '≤15', min: -Infinity, max: 15, exclusiveMin: false, label: 'CrCl ≤ 15 mL/min（須配合間歇性血液透析）', loadingAtm: 1000, maintAtm: 675, intervalH: 12, requiresRrt: true }
+      ];
+
+      function ibwKg(sex, heightCm) {
+        return (sex === 'female' ? 45.5 : 50) + 0.91 * (heightCm - 152.4);
+      }
+      function adjBwKg(ibw, tbw) { return ibw + 0.4 * (tbw - ibw); }
+      function crclWeightKg(tbw, ibw) {
+        return tbw < ibw ? { kg: tbw, type: 'TBW' } : { kg: adjBwKg(ibw, tbw), type: 'ABW' };
+      }
+      function cockcroftGault(age, weightKg, scr, sex) {
+        const v = ((140 - age) * weightKg) / (72 * scr);
+        return sex === 'female' ? v * 0.85 : v;
+      }
+      function inBand(crcl, band) {
+        const aboveMin = band.exclusiveMin ? crcl > band.min : crcl >= band.min;
+        return aboveMin && crcl <= band.max;
+      }
+      function crclBand(crcl) {
+        return CRCL_BANDS.find(b => inBand(crcl, b));
+      }
+      function describePrep(atmMg) {
+        const p = PREP[atmMg];
+        if (!p) throw new Error('Unknown ATM dose ' + atmMg);
+        const split = p.vials === 2
+          ? [{ vial: 1, ml: FULL_VIAL_ML }, { vial: 2, ml: +(p.withdrawMl - FULL_VIAL_ML).toFixed(1) }]
+          : [{ vial: 1, ml: p.withdrawMl }];
+        return { ...p, split, doseText: p.atmLabel + ' / ' + p.aviLabel };
+      }
+      function dosesPerDay(intervalH) { return 24 / intervalH; }
+
+      /**
+       * p = { sex, age, heightCm, weightKg, scr, mode: 'cg'|'manual'|'ihd'|'crrt',
+       *       manualCrcl, effluent: '1-2'|'3-5' }
+       */
+      function computeEmblaveo(p) {
+        const ibw = ibwKg(p.sex, p.heightCm);
+        const cw = crclWeightKg(p.weightKg, ibw);
+        const cgCrcl = cockcroftGault(p.age, cw.kg, p.scr, p.sex);
+        let usedCrcl = cgCrcl;
+        let crclSource = 'cg';
+        let band;
+        let note = '';
+        let warning = null;
+
+        if (p.mode === 'manual') {
+          usedCrcl = p.manualCrcl;
+          crclSource = 'manual';
+          band = crclBand(usedCrcl);
+          note = '手動輸入 CrCl';
+        } else if (p.mode === 'ihd') {
+          usedCrcl = cgCrcl;
+          crclSource = 'ihd';
+          band = CRCL_BANDS.find(b => b.key === '≤15');
+          note = '間歇性血液透析：使用 CrCl ≤ 15 方案；透析日於 HD 結束後給藥';
+        } else if (p.mode === 'crrt') {
+          usedCrcl = cgCrcl;
+          crclSource = 'crrt';
+          const high = p.effluent === '3-5';
+          band = {
+            key: high ? 'crrt-3-5' : 'crrt-1-2',
+            label: high ? 'CRRT 流出液流速 3–5 L/h' : 'CRRT 流出液流速 1–2 L/h',
+            loadingAtm: high ? 2000 : 1350,
+            maintAtm: high ? 750 : 675,
+            intervalH: high ? 6 : 8,
+            crrt: true
+          };
+          note = 'CRRT 初始劑量（仿單假設無殘餘腎功能）';
+        } else {
+          band = crclBand(usedCrcl);
+          note = '依 Cockcroft-Gault 計算，使用 ' + cw.type;
+        }
+
+        if (p.mode !== 'ihd' && p.mode !== 'crrt' && band.requiresRrt) {
+          warning = 'CrCl ≤ 15 mL/min 時，除非已開始血液透析或其他腎臟替代治療，否則不應使用 aztreonam-avibactam。';
+        }
+
+        const loading = describePrep(band.loadingAtm);
+        const maintenance = describePrep(band.maintAtm);
+        const perDay = dosesPerDay(band.intervalH);
+        return {
+          ibw, abw: adjBwKg(ibw, p.weightKg), tbw: p.weightKg,
+          crclWeight: cw, cgCrcl, usedCrcl, crclSource, band, note, warning,
+          loading, maintenance, intervalH: band.intervalH, dosesPerDay: perDay,
+          dailyAtmMg: maintenance.atmMg * perDay,
+          dailyAviMg: maintenance.aviMg * perDay,
+          dailyVialsOpened: maintenance.vials * perDay
+        };
+      }
+
+      // ===== end Emblaveo dosing core
+      function prepHtml(prep, kind) {
+        const listed = prep.listed
+          ? '抽取量依 EU SmPC Table 5'
+          : '仿單 Table 5 未列出此劑量，依公式 ' + prep.atmMg + ' ÷ 131.2 = ' + prep.withdrawMl + ' mL';
+        let steps;
+        if (prep.vials === 2) {
+          steps = '需開 <strong>2 支</strong>。各以 10 mL 注射用滅菌水復溶後，第 1 支抽取 <strong>' + prep.split[0].ml + ' mL</strong>（全量），第 2 支抽取 <strong>' + prep.split[1].ml + ' mL</strong>，共 <strong>' + prep.withdrawMl + ' mL</strong>；第 2 支餘量棄去。再稀釋至點滴袋 50–250 mL，輸注 3 小時。';
+        } else if (prep.withdrawMl === FULL_VIAL_ML) {
+          steps = '需開 <strong>1 支</strong>。以 10 mL 注射用滅菌水復溶後，抽取 <strong>' + prep.withdrawMl + ' mL</strong>（近乎全量），再稀釋至點滴袋 50–250 mL，輸注 3 小時。';
+        } else {
+          steps = '需開 <strong>1 支</strong>。以 10 mL 注射用滅菌水復溶後，抽取 <strong>' + prep.withdrawMl + ' mL</strong>，餘量棄去。再稀釋至點滴袋 50–250 mL，輸注 3 小時。';
+        }
+        const kicker = kind === 'loading' ? 'Loading 調製' : '每劑 Maintenance 調製';
+        return '<p class="prep-kicker">' + kicker + ' · ' + listed + '</p>' +
+          '<div class="prep-main"><div>' + prep.doseText + '</div><div>開 ' + prep.vials + ' vial　·　抽 ' + prep.withdrawMl + ' mL</div></div>' +
+          '<p class="prep-steps">' + steps + '</p>';
+      }
+
+      function fmtCrcl(v) {
+        return (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, '') + ' mL/min';
+      }
+      function fmtG(mg) {
+        const g = mg / 1000;
+        return (Math.round(g * 1000) / 1000) + ' g';
+      }
+
+      function setGroupPressed(buttons, active) {
+        buttons.forEach(btn => btn.setAttribute('aria-pressed', btn === active ? 'true' : 'false'));
+      }
+
+      function buildDoseTable() {
+        const rows = [
+          { key: '>50', cond: 'CrCl &gt; 50', load: 2000, maint: 1500, interval: 'q6h' },
+          { key: '30-50', cond: 'CrCl &gt; 30 且 ≤ 50', load: 2000, maint: 750, interval: 'q6h' },
+          { key: '15-30', cond: 'CrCl &gt; 15 且 ≤ 30', load: 1350, maint: 675, interval: 'q8h' },
+          { key: '≤15', cond: 'CrCl ≤ 15 + iHD', load: 1000, maint: 675, interval: 'q12h' },
+          { key: 'crrt-1-2', cond: 'CRRT 1–2 L/h', load: 1350, maint: 675, interval: 'q8h' },
+          { key: 'crrt-3-5', cond: 'CRRT 3–5 L/h', load: 2000, maint: 750, interval: 'q6h' }
+        ];
+        const cell = (atm) => {
+          const p = describePrep(atm);
+          const star = p.listed ? '' : '<sup>*</sup>';
+          return '<td>' + p.doseText + '<span class="table-prep">' + p.withdrawMl + ' mL' + star + ' · ' + p.vials + ' 支</span></td>';
+        };
+        const tr = rows.map(r => '<tr data-key="' + r.key + '"><th>' + r.cond + '</th>' + cell(r.load) + cell(r.maint) + '<td>' + r.interval + '</td></tr>').join('');
+        el.doseTable.innerHTML =
+          '<div class="table-wrap"><table class="ref-table">' +
+          '<thead><tr><th>條件</th><th>Loading</th><th>Maintenance</th><th>間隔</th></tr></thead>' +
+          '<tbody id="dose-table-body">' + tr + '</tbody></table></div>' +
+          '<p class="table-foot">一律輸注 3 小時。* 1 g / 0.33 g 的 7.6 mL 由 1000 ÷ 131.2 計算（Table 5「All other doses」），其餘抽取量為表列值。間隔自輸注開始時起算。</p>';
+      }
+
+      function highlightTableRow(key) {
+        const body = document.getElementById('dose-table-body');
+        if (!body) return;
+        [...body.rows].forEach(row => row.classList.toggle('is-active', row.getAttribute('data-key') === key));
+      }
+
+      const el = {
+        btnMale: document.getElementById('btn-male'),
+        btnFemale: document.getElementById('btn-female'),
+        ageSlider: document.getElementById('age-slider'),
+        heightSlider: document.getElementById('height-slider'),
+        weightSlider: document.getElementById('weight-slider'),
+        scrSlider: document.getElementById('scr-slider'),
+        manualCrclSlider: document.getElementById('manual-crcl-slider'),
+        ageVal: document.getElementById('age-val'),
+        heightVal: document.getElementById('height-val'),
+        weightVal: document.getElementById('weight-val'),
+        scrVal: document.getElementById('scr-val'),
+        manualCrclVal: document.getElementById('manual-crcl-val'),
+        dispTbw: document.getElementById('disp-tbw'),
+        dispIbw: document.getElementById('disp-ibw'),
+        dispAbw: document.getElementById('disp-abw'),
+        manualField: document.getElementById('manual-field'),
+        ihdField: document.getElementById('ihd-field'),
+        crrtField: document.getElementById('crrt-field'),
+        crclValue: document.getElementById('crcl-value'),
+        bandLabel: document.getElementById('band-label'),
+        crclNote: document.getElementById('crcl-note'),
+        loadRegimen: document.getElementById('load-regimen'),
+        loadDose: document.getElementById('load-dose'),
+        loadVial: document.getElementById('load-vial'),
+        loadMl: document.getElementById('load-ml'),
+        loadPrep: document.getElementById('load-prep'),
+        maintRegimen: document.getElementById('maint-regimen'),
+        maintDose: document.getElementById('maint-dose'),
+        maintVial: document.getElementById('maint-vial'),
+        maintMl: document.getElementById('maint-ml'),
+        maintPrep: document.getElementById('maint-prep'),
+        maintDaily: document.getElementById('maint-daily'),
+        alertBox: document.getElementById('alert-box'),
+        doseTable: document.getElementById('dose-table'),
+        effLow: document.getElementById('eff-low'),
+        effHigh: document.getElementById('eff-high')
+      };
+      const modeButtons = {
+        cg: document.getElementById('mode-cg'),
+        manual: document.getElementById('mode-manual'),
+        ihd: document.getElementById('mode-ihd'),
+        crrt: document.getElementById('mode-crrt')
+      };
+
+      const state = { sex: 'male', mode: 'cg', effluent: '1-2' };
+
+      function readInputs() {
+        return {
+          sex: state.sex,
+          age: +el.ageSlider.value,
+          heightCm: +el.heightSlider.value,
+          weightKg: +el.weightSlider.value,
+          scr: +el.scrSlider.value,
+          mode: state.mode,
+          manualCrcl: +el.manualCrclSlider.value,
+          effluent: state.effluent
+        };
+      }
+
+      function updateRangeFills() {
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+          const min = +slider.min, max = +slider.max, val = +slider.value;
+          slider.style.setProperty('--range-progress', ((val - min) / (max - min) * 100) + '%');
+        });
+      }
+
+      function update() {
+        const p = readInputs();
+        el.ageVal.textContent = p.age;
+        el.heightVal.textContent = p.heightCm;
+        el.weightVal.textContent = p.weightKg;
+        el.scrVal.textContent = p.scr.toFixed(1);
+        el.manualCrclVal.textContent = p.manualCrcl;
+        updateRangeFills();
+
+        el.manualField.hidden = p.mode !== 'manual';
+        el.ihdField.hidden = p.mode !== 'ihd';
+        el.crrtField.hidden = p.mode !== 'crrt';
+
+        const r = computeEmblaveo(p);
+        el.dispTbw.textContent = r.tbw.toFixed(0) + ' kg';
+        el.dispIbw.textContent = r.ibw.toFixed(1) + ' kg';
+        el.dispAbw.textContent = r.abw.toFixed(1) + ' kg';
+
+        if (p.mode === 'ihd') {
+          el.crclValue.textContent = 'iHD';
+          el.bandLabel.textContent = r.band.label;
+          el.crclNote.textContent = r.note + '（CG CrCl ' + fmtCrcl(r.cgCrcl) + '，僅供參考）';
+        } else if (p.mode === 'crrt') {
+          el.crclValue.textContent = r.band.label.replace('CRRT 流出液流速 ', '');
+          el.bandLabel.textContent = 'CRRT';
+          el.crclNote.textContent = r.note + '（CG CrCl ' + fmtCrcl(r.cgCrcl) + '，僅供參考）';
+        } else if (p.mode === 'manual') {
+          el.crclValue.textContent = fmtCrcl(r.usedCrcl);
+          el.bandLabel.textContent = r.band.label;
+          el.crclNote.textContent = r.note + '（CG 計算值 ' + fmtCrcl(r.cgCrcl) + '）';
+        } else {
+          el.crclValue.textContent = fmtCrcl(r.usedCrcl);
+          el.bandLabel.textContent = r.band.label;
+          el.crclNote.textContent = r.note + '（' + r.crclWeight.kg.toFixed(1) + ' kg）';
+        }
+
+        el.loadRegimen.textContent = '輸注 3 小時 · 維持劑量於 ' + r.intervalH + ' 小時後開始';
+        el.loadDose.textContent = r.loading.doseText;
+        el.loadVial.textContent = r.loading.vials;
+        el.loadMl.textContent = r.loading.withdrawMl + ' mL';
+        el.loadPrep.innerHTML = prepHtml(r.loading, 'loading');
+
+        el.maintRegimen.textContent = '輸注 3 小時 · 每 ' + r.intervalH + ' 小時';
+        el.maintDose.textContent = r.maintenance.doseText;
+        el.maintVial.textContent = r.maintenance.vials;
+        el.maintMl.textContent = r.maintenance.withdrawMl + ' mL';
+        el.maintPrep.innerHTML = prepHtml(r.maintenance, 'maintenance');
+        el.maintDaily.textContent = '每日維持劑量共 ' + fmtG(r.dailyAtmMg) + ' / ' + fmtG(r.dailyAviMg) +
+          '（' + r.dosesPerDay + ' 劑）。因單支僅限單次使用，每日需開 ' + r.dailyVialsOpened + ' vial。';
+
+        const alerts = [];
+        if (r.warning) alerts.push(r.warning);
+        if (p.mode === 'ihd') {
+          alerts.push('4 小時血液透析約可清除 aztreonam 劑量的 38%、avibactam 的 55%；透析日請在 HD 結束後給藥。仿單未另外規定補充劑量。');
+        }
+        if (p.mode === 'crrt') {
+          alerts.push('CRRT 劑量為初始建議，假設無殘餘腎功能；仿單僅列出流出液流速 1–2 與 3–5 L/h，未涵蓋其他流速。');
+        }
+        if (alerts.length > 0) {
+          el.alertBox.innerHTML = alerts.join('<br>');
+          el.alertBox.classList.add('is-visible');
+        } else {
+          el.alertBox.replaceChildren();
+          el.alertBox.classList.remove('is-visible');
+        }
+        highlightTableRow(r.band.key);
+      }
+
+      el.btnMale.addEventListener('click', () => {
+        state.sex = 'male';
+        setGroupPressed([el.btnMale, el.btnFemale], el.btnMale);
+        update();
+      });
+      el.btnFemale.addEventListener('click', () => {
+        state.sex = 'female';
+        setGroupPressed([el.btnMale, el.btnFemale], el.btnFemale);
+        update();
+      });
+      Object.entries(modeButtons).forEach(([mode, btn]) => {
+        btn.addEventListener('click', () => {
+          state.mode = mode;
+          setGroupPressed(Object.values(modeButtons), btn);
+          update();
+        });
+      });
+      el.effLow.addEventListener('click', () => {
+        state.effluent = '1-2';
+        setGroupPressed([el.effLow, el.effHigh], el.effLow);
+        update();
+      });
+      el.effHigh.addEventListener('click', () => {
+        state.effluent = '3-5';
+        setGroupPressed([el.effLow, el.effHigh], el.effHigh);
+        update();
+      });
+      [el.ageSlider, el.heightSlider, el.weightSlider, el.scrSlider, el.manualCrclSlider].forEach(slider => {
+        slider.addEventListener('input', update, { passive: true });
+        slider.addEventListener('change', update);
+      });
+
+      document.documentElement.dataset.appVersion = APP_VERSION;
+      buildDoseTable();
+      update();
+    })();
+
+  </script>
+</body>
+</html>
