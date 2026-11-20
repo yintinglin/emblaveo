@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#16a34a">
   <meta name="description" content="Emblaveo（aztreonam-avibactam）腎功能劑量計算器：依 CrCl 換算 loading / maintenance 公克劑量與支數。">
-  <title>Emblaveo 劑量計算器 v261120H</title>
+  <title>Emblaveo 劑量計算器 v261120I</title>
   <style>
     :root {
       --green: #16a34a;
@@ -338,6 +338,13 @@
     }
 
     .weight-cell + .weight-cell { border-left: 1px solid #e0e7e3; }
+
+    .weight-cell.is-used {
+      background: var(--green-soft);
+    }
+    .weight-cell.is-used .weight-name {
+      color: var(--green-dark);
+    }
 
     .weight-name {
       margin-bottom: 3px;
@@ -925,7 +932,7 @@
             <p class="subtitle">Aztreonam-avibactam · 依 CrCl 調整 · 會診支數換算</p>
           </div>
         </div>
-        <span class="version-badge" aria-label="版本 v261120H">v261120H</span>
+        <span class="version-badge" aria-label="版本 v261120I">v261120I</span>
       </header>
 
       <div class="workspace">
@@ -982,20 +989,20 @@
 
           <div class="weight-summary" aria-label="體重參數">
             <div class="weight-grid">
-              <div class="weight-cell">
+              <div class="weight-cell is-used" data-wtype="TBW">
                 <div class="weight-name">TBW</div>
                 <div class="weight-number" id="disp-tbw">60 kg</div>
               </div>
-              <div class="weight-cell">
+              <div class="weight-cell" data-wtype="IBW">
                 <div class="weight-name">IBW</div>
                 <div class="weight-number" id="disp-ibw">61.5 kg</div>
               </div>
-              <div class="weight-cell">
-                <div class="weight-name">ABW</div>
+              <div class="weight-cell" data-wtype="AdjBW">
+                <div class="weight-name">AdjBW</div>
                 <div class="weight-number" id="disp-abw">60.9 kg</div>
               </div>
             </div>
-            <div class="formula-note">IBW：Devine formula · ABW = IBW + 0.4 × (TBW − IBW)。成人劑量不依體重調整，體重僅用於計算 CrCl。</div>
+            <div class="formula-note">IBW：Devine formula。CrCl 體重：TBW &lt; IBW 用 TBW；IBW–1.2×IBW 用 IBW；超過 1.2×IBW 用 AdjBW = IBW + 0.4 × (TBW − IBW)。成人劑量不依體重調整，體重僅用於計算 CrCl。</div>
           </div>
 
           <div class="control-block">
@@ -1097,7 +1104,7 @@
           <div id="logic-notes" class="logic-notes">
             <p>・<strong>1 vial = 2 g</strong>（aztreonam 1.5 g + avibactam 0.5 g）。支數以公克劑量 ÷ 2，最多顯示到小數兩位。</p>
             <p>・每支僅限單次使用，不足 1 支仍須開整支（例如 0.45 支仍開 1 支）。</p>
-            <p>・成人劑量只依 CrCl 調整，不依體重或年齡另外加減。CrCl：Cockcroft-Gault，使用 ABW（TBW &lt; IBW 時用 TBW）。一律輸注 3 小時；maintenance 於 loading 後的下一個給藥間隔開始（間隔自輸注開始時起算）。</p>
+            <p>・成人劑量只依 CrCl 調整，不依體重或年齡另外加減。CrCl：Cockcroft-Gault（mL/min，未經 BSA 校正）。代入體重：TBW &lt; IBW 用 TBW，IBW 至 1.2×IBW 用 IBW，超過 1.2×IBW 用 AdjBW。一律輸注 3 小時；maintenance 於 loading 後的下一個給藥間隔開始（間隔自輸注開始時起算）。</p>
             <p>・複雜腹腔感染若懷疑厭氧菌，應併用 metronidazole。</p>
           </div>
 
@@ -1114,7 +1121,7 @@
       <footer class="disclaimer">
         <p class="disclaimer-title">⚠️ 免責聲明 / Disclaimer</p>
         <p>本工具僅供醫療專業人員參考，不能取代臨床判斷與藥師核對；給藥前請依院內規範與現行仿單確認。支數依 1 vial = 2 g 換算，供會診書寫參考。</p>
-        <p class="footer-version"><strong>版本：</strong>v261120H</p>
+        <p class="footer-version"><strong>版本：</strong>v261120I</p>
       </footer>
 
       <noscript><div class="noscript">此計算器需要啟用 JavaScript 才能更新劑量。</div></noscript>
@@ -1126,7 +1133,7 @@
       'use strict';
 
       // ===== Emblaveo (ATM-AVI) dosing core — pure functions, no DOM =====
-      const APP_VERSION = 'v261120H';
+      const APP_VERSION = 'v261120I';
       const VIAL_G = 2; // 1 vial = 2 g total (1.5 g ATM + 0.5 g AVI)
 
       // displayVials is the clean 2-decimal value used on the page (2.67/2 = 1.335 → 1.33, not 1.34)
@@ -1150,8 +1157,13 @@
         return (sex === 'female' ? 45.5 : 50) + 0.91 * (heightCm - 152.4);
       }
       function adjBwKg(ibw, tbw) { return ibw + 0.4 * (tbw - ibw); }
+      // CrCl weight: TBW if TBW < IBW or IBW <= 0 (very short stature);
+      // IBW if IBW <= TBW <= 1.2 x IBW; AdjBW if TBW > 1.2 x IBW.
       function crclWeightKg(tbw, ibw) {
-        return tbw < ibw ? { kg: tbw, type: 'TBW' } : { kg: adjBwKg(ibw, tbw), type: 'ABW' };
+        if (!(ibw > 0)) return { kg: tbw, type: 'TBW' };
+        if (tbw < ibw) return { kg: tbw, type: 'TBW' };
+        if (tbw <= 1.2 * ibw) return { kg: ibw, type: 'IBW' };
+        return { kg: adjBwKg(ibw, tbw), type: 'AdjBW' };
       }
       function cockcroftGault(age, weightKg, scr, sex) {
         const v = ((140 - age) * weightKg) / (72 * scr);
@@ -1375,6 +1387,11 @@
         el.dispTbw.textContent = r.tbw.toFixed(0) + ' kg';
         el.dispIbw.textContent = r.ibw.toFixed(1) + ' kg';
         el.dispAbw.textContent = r.abw.toFixed(1) + ' kg';
+        const usedType = r.crclWeight.type;
+
+        document.querySelectorAll('.weight-cell[data-wtype]').forEach(c => {
+          c.classList.toggle('is-used', c.getAttribute('data-wtype') === usedType);
+        });
 
         if (p.mode === 'ihd') {
           el.crclValue.textContent = 'iHD';
