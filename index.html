@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#16a34a">
   <meta name="description" content="Emblaveo（aztreonam-avibactam）腎功能劑量計算器：依 CrCl 換算 loading / maintenance 公克劑量與支數。">
-  <title>Emblaveo 劑量計算器 v261120K</title>
+  <title>Emblaveo 劑量計算器 v261120M</title>
   <style>
     :root {
       --green: #16a34a;
@@ -769,10 +769,11 @@
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
     }
   
-    .dose-metric.dose-pair .metric-value {
-      white-space: normal;
-      font-size: 25px;
-      line-height: 1.1;
+    .dose-metric.dose-pair .metric-value,
+    .dose-metric.dose-pair:first-child .metric-value {
+      white-space: nowrap;
+      font-size: 22px;
+      line-height: 1.15;
     }
     .prep-box {
       margin: 12px 0 0;
@@ -811,11 +812,13 @@
     }
     .effluent-switch { margin-bottom: 18px; }
     @media (min-width: 961px) {
-      .dose-metric.dose-pair .metric-value { font-size: 28px; }
+      .dose-metric.dose-pair .metric-value,
+      .dose-metric.dose-pair:first-child .metric-value { font-size: 26px; }
       .prep-main { font-size: 19px; }
     }
     @media (max-width: 480px) {
-      .dose-metric.dose-pair .metric-value { font-size: 22px; }
+      .dose-metric.dose-pair .metric-value,
+      .dose-metric.dose-pair:first-child .metric-value { font-size: 19px; }
     }
 
     .mode-switch.three { grid-template-columns: 1fr 1fr 1fr; }
@@ -841,6 +844,28 @@
       color: #fff;
       background: var(--green);
       box-shadow: 0 3px 9px rgba(22, 163, 74, 0.22);
+    }
+    .metric-hint {
+      font-weight: 650;
+      color: var(--muted);
+    }
+    .dose-total {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.4;
+      font-weight: 600;
+    }
+    .crrt-offlabel {
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #fff7ed;
+      color: #9a3412;
+      font-size: 12.5px;
+      line-height: 1.55;
+      font-weight: 650;
     }
     .dose-sub {
       margin: 8px 0 0;
@@ -933,7 +958,7 @@
             <p class="subtitle">Aztreonam-avibactam · 依 CrCl 調整 · 會診支數換算</p>
           </div>
         </div>
-        <span class="version-badge" aria-label="版本 v261120K">v261120K</span>
+        <span class="version-badge" aria-label="版本 v261120M">v261120M</span>
       </header>
 
       <div class="workspace">
@@ -980,12 +1005,12 @@
           <div class="range-field">
             <div class="range-heading">
               <label for="scr-slider">血清肌酸酐 SCr</label>
-              <output class="range-value" for="scr-slider" aria-live="polite"><span id="scr-val">1.0</span><span class="unit"> mg/dL</span></output>
+              <output class="range-value" for="scr-slider" aria-live="polite"><span id="scr-val">1.00</span><span class="unit"> mg/dL</span></output>
             </div>
             <div class="range-control">
-              <input type="range" id="scr-slider" min="0.3" max="10.0" value="1.0" step="0.1" aria-label="血清肌酸酐，mg/dL">
+              <input type="range" id="scr-slider" min="0" max="1000" value="500" step="1" aria-label="血清肌酸酐，mg/dL，0.20 至 1.00 佔滑桿一半">
             </div>
-            <div class="range-scale" aria-hidden="true"><span>0.3 mg/dL</span><span>10.0 mg/dL</span></div>
+            <div class="range-scale" aria-hidden="true"><span>0.20</span><span>1.00</span><span>10.00</span></div>
           </div>
 
           <div class="weight-summary" aria-label="體重參數">
@@ -1037,7 +1062,7 @@
               <button type="button" id="eff-low" class="gender-button" aria-pressed="true">1–2 L/h</button>
               <button type="button" id="eff-high" class="gender-button" aria-pressed="false">3–5 L/h</button>
             </div>
-            <p class="mode-note">劑量依 EU SmPC Table 3（假設無殘餘腎功能的初始劑量）。熱病（Sanford）對 CRRT 僅有個案報告。</p>
+            <p class="mode-note">台灣仿單未提供 CRRT 劑量（僅寫需依 CLCRRT 調整、高於 HD），以下為 EU SmPC 仿單外參考。熱病（Sanford）對 CRRT 僅有個案報告。</p>
           </div>
 
           <div class="crcl-display" aria-label="腎功能分級摘要">
@@ -1050,6 +1075,7 @@
         </section>
 
         <section class="results" aria-label="劑量結果" aria-live="polite">
+          <p class="crrt-offlabel" id="crrt-offlabel" hidden>台灣仿單未提供 CRRT 劑量（僅寫需依 CLCRRT 調整、高於 HD），以下為 EU SmPC 仿單外參考。</p>
           <article class="dose-card loading">
             <div class="dose-heading">
               <div>
@@ -1059,8 +1085,9 @@
             </div>
             <div class="dose-values dose-simple">
               <div class="dose-metric dose-pair">
-                <span class="metric-label">每次劑量</span>
-                <span class="metric-value" id="load-dose">2.67 g</span>
+                <span class="metric-label">每次劑量 <span class="metric-hint">(ATM/AVI)</span></span>
+                <span class="metric-value" id="load-dose">2 g / 0.67 g</span>
+                <span class="dose-total" id="load-total">合計 2.67 g</span>
               </div>
               <div class="dose-metric">
                 <span class="metric-label">支數</span>
@@ -1068,7 +1095,7 @@
                 <span class="vial-exact" id="load-frac">約 1⅓</span>
               </div>
             </div>
-            <p class="dose-sub" id="load-split">aztreonam 2 g + avibactam 0.67 g</p>
+            <p class="dose-sub" id="load-split" hidden></p>
           </article>
 
           <article class="dose-card maintenance">
@@ -1080,8 +1107,9 @@
             </div>
             <div class="dose-values dose-simple">
               <div class="dose-metric dose-pair">
-                <span class="metric-label">每次劑量</span>
-                <span class="metric-value" id="maint-dose">2 g</span>
+                <span class="metric-label">每次劑量 <span class="metric-hint">(ATM/AVI)</span></span>
+                <span class="metric-value" id="maint-dose">1.5 g / 0.5 g</span>
+                <span class="dose-total" id="maint-total">合計 2 g</span>
               </div>
               <div class="dose-metric">
                 <span class="metric-label">支數</span>
@@ -1089,7 +1117,7 @@
                 <span class="vial-exact" id="maint-frac" hidden></span>
               </div>
             </div>
-            <p class="dose-sub" id="maint-split">aztreonam 1.5 g + avibactam 0.5 g</p>
+            <p class="dose-sub" id="maint-split" hidden></p>
           </article>
 
           <div class="consult-box">
@@ -1114,7 +1142,8 @@
             <p>・<strong>1 vial = 2 g</strong>（aztreonam 1.5 g + avibactam 0.5 g）。支數以公克劑量 ÷ 2，最多顯示到小數兩位。</p>
             <p>・每支僅限單次使用，不足 1 支仍須開整支（例如 0.45 支仍開 1 支）。</p>
             <p>・成人劑量只依 CrCl 調整，不依體重或年齡另外加減。CrCl：Cockcroft-Gault（mL/min，未經 BSA 校正）。代入體重：TBW &lt; IBW 用 TBW，IBW 至 1.2×IBW 用 IBW，超過 1.2×IBW 用 AdjBW。一律輸注 3 小時；maintenance 於 loading 後的下一個給藥間隔開始（間隔自輸注開始時起算）。</p>
-            <p>・複雜腹腔感染若懷疑厭氧菌，應併用 metronidazole。</p>
+            <p>・複雜腹腔感染（cIAI）：於排除厭氧菌感染前應併用 metronidazole。</p>
+            <p>・配製後濃度 aztreonam 131.2 mg/mL、avibactam 43.7 mg/mL。加入輸液袋後最終濃度須為 aztreonam 1.5–40 mg/mL、avibactam 0.50–13.3 mg/mL。稀釋後安定性：2–8 °C 可保存至 24 小時；其後於 ≤30 °C，NS 或乳酸林格氏液可再放 12 小時，D5W 可再放 6 小時。</p>
           </div>
 
           <div id="dose-table"></div>
@@ -1122,8 +1151,8 @@
           <div id="references" class="references">
             <p class="references-title"><strong>參考資料 References</strong></p>
             <p>1. EMA. Emblaveo EPAR Product Information（SmPC）Table 1–3。<a href="https://www.ema.europa.eu/en/documents/product-information/emblaveo-epar-product-information_en.pdf" target="_blank" rel="noopener">EMA PDF</a></p>
-            <p>2. Sanford Guide（熱病）aztreonam-avibactam 腎功能劑量，作為交叉核對；公克劑量與間隔與 EU 仿單相同。CRRT 於熱病僅有個案報告，本頁 CRRT 仍依 EU SmPC Table 3。</p>
-            <p>3. 台灣仿單第 3.2 節調製方式（表 2 抽取量）。配製以 10 mL 注射用水復溶後濃度為 ATM 131.2 mg/mL；本頁預設加入 NS 100 mL（最終濃度落在仿單 1.5–40 mg/mL 範圍內）。</p>
+            <p>2. Sanford Guide（熱病）aztreonam-avibactam 腎功能劑量，作為交叉核對；公克劑量與間隔與 EU 仿單相同。台灣仿單未提供 CRRT 劑量（僅寫需依 CLCRRT 調整、高於 HD）；本頁 CRRT 數字依 EU SmPC Table 3，為仿單外參考。熱病僅有個案報告。</p>
+            <p>3. 台灣仿單第 3.2 節調製方式（表 2 抽取量）。配製以 10 mL 注射用水復溶後濃度為 ATM 131.2 mg/mL；本頁預設加入 NS 100 mL（最終濃度須為 aztreonam 1.5–40 mg/mL、avibactam 0.50–13.3 mg/mL）。稀釋後：2–8 °C 至 24 小時；其後 ≤30 °C 下 NS 或乳酸林格氏液 12 小時、D5W 6 小時。</p>
           </div>
         </section>
       </div>
@@ -1131,7 +1160,7 @@
       <footer class="disclaimer">
         <p class="disclaimer-title">⚠️ 免責聲明 / Disclaimer</p>
         <p>本工具僅供醫療專業人員參考，不能取代臨床判斷與藥師核對；給藥前請依院內規範與現行仿單確認。支數依 1 vial = 2 g 換算，供會診書寫參考。</p>
-        <p class="footer-version"><strong>版本：</strong>v261120K</p>
+        <p class="footer-version"><strong>版本：</strong>v261120M</p>
       </footer>
 
       <noscript><div class="noscript">此計算器需要啟用 JavaScript 才能更新劑量。</div></noscript>
@@ -1143,8 +1172,50 @@
       'use strict';
 
       // ===== Emblaveo (ATM-AVI) dosing core — pure functions, no DOM =====
-      const APP_VERSION = 'v261120K';
+      const APP_VERSION = 'v261120M';
       const VIAL_G = 2; // 1 vial = 2 g total (1.5 g ATM + 0.5 g AVI)
+      const CRRT_OFFLABEL = '台灣仿單未提供 CRRT 劑量（僅寫需依 CLCRRT 調整、高於 HD），以下為 EU SmPC 仿單外參考';
+      const SCR_MIN = 0.2;
+      const SCR_BREAK = 1;
+      const SCR_MAX = 10;
+      const SCR_STEP = 0.01;
+      const SCR_SLIDER_MAX = 1000;
+      const SCR_SLIDER_BREAK = 500;
+
+      function toFiniteNumber(v, fallback) {
+        const n = typeof v === 'number' ? v : parseFloat(v);
+        return Number.isFinite(n) ? n : fallback;
+      }
+      function snapScr(v) {
+        const n = toFiniteNumber(v, SCR_BREAK);
+        const snapped = Math.round(n / SCR_STEP) * SCR_STEP;
+        const clamped = Math.min(SCR_MAX, Math.max(SCR_MIN, snapped));
+        return Math.round(clamped * 100) / 100;
+      }
+      function scrToSliderPos(scr) {
+        const v = snapScr(scr);
+        let pos;
+        if (v <= SCR_BREAK) {
+          pos = SCR_SLIDER_BREAK * (v - SCR_MIN) / (SCR_BREAK - SCR_MIN);
+        } else {
+          pos = SCR_SLIDER_BREAK + (SCR_SLIDER_MAX - SCR_SLIDER_BREAK) * (v - SCR_BREAK) / (SCR_MAX - SCR_BREAK);
+        }
+        return Math.round(Math.max(0, Math.min(SCR_SLIDER_MAX, pos)));
+      }
+      function sliderPosToScr(pos) {
+        const p = toFiniteNumber(pos, SCR_SLIDER_BREAK);
+        const clamped = Math.max(0, Math.min(SCR_SLIDER_MAX, p));
+        let v;
+        if (clamped <= SCR_SLIDER_BREAK) {
+          v = SCR_MIN + (clamped / SCR_SLIDER_BREAK) * (SCR_BREAK - SCR_MIN);
+        } else {
+          v = SCR_BREAK + ((clamped - SCR_SLIDER_BREAK) / (SCR_SLIDER_MAX - SCR_SLIDER_BREAK)) * (SCR_MAX - SCR_BREAK);
+        }
+        return snapScr(v);
+      }
+      function roundCrcl(v) {
+        return Math.round(toFiniteNumber(v, 0) * 10) / 10;
+      }
 
       // displayVials is the clean 2-decimal value used on the page (2.67/2 = 1.335 → 1.33, not 1.34)
       const DOSE = {
@@ -1186,12 +1257,13 @@
           ' mL，加入 NS 100 mL，IV drip 3 小時' + interval + '。';
       }
 
-      function formatPrepText(loadingG, maintG, intervalH, afterHd) {
+      function formatPrepText(loadingG, maintG, intervalH, afterHd, crrt) {
         let text = '泡製：\n' +
           formatDosePrep('loading', loadingG, intervalH) + '\n' +
           formatDosePrep('maintenance', maintG, intervalH) + '\n' +
           '注意：泡製到加入輸液袋須在 30 分鐘內完成；每支限單次使用，剩餘丟棄。';
         if (afterHd) text += '透析日於透析結束後給予。';
+        if (crrt) text += '\n' + CRRT_OFFLABEL + '。';
         return text;
       }
 
@@ -1199,11 +1271,11 @@
         { key: '>50', min: 50, exclusiveMin: true, max: Infinity, label: 'CrCl > 50 mL/min', loadingG: 2.67, maintG: 2, intervalH: 6 },
         { key: '30-50', min: 30, exclusiveMin: true, max: 50, label: 'CrCl > 30 且 ≤ 50 mL/min', loadingG: 2.67, maintG: 1, intervalH: 6 },
         { key: '15-30', min: 15, exclusiveMin: true, max: 30, label: 'CrCl > 15 且 ≤ 30 mL/min', loadingG: 1.8, maintG: 0.9, intervalH: 8 },
-        { key: '≤15', min: -Infinity, exclusiveMin: false, max: 15, label: 'CrCl ≤ 15 mL/min（須配合間歇性血液透析）', loadingG: 1.33, maintG: 0.9, intervalH: 12, requiresRrt: true }
+        { key: '≤15', min: -Infinity, exclusiveMin: false, max: 15, label: 'CrCl ≤ 15 mL/min（未洗腎）', loadingG: 1.33, maintG: 0.9, intervalH: 12 }
       ];
 
       function ibwKg(sex, heightCm) {
-        return (sex === 'female' ? 45.5 : 50) + 0.91 * (heightCm - 152.4);
+        return (sex === 'female' ? 45.5 : 50) + (2.3 / 2.54) * (heightCm - 152.4);
       }
       function adjBwKg(ibw, tbw) { return ibw + 0.4 * (tbw - ibw); }
       // CrCl weight: TBW if TBW < IBW or IBW <= 0 (very short stature);
@@ -1233,6 +1305,7 @@
           exact,
           opened,
           splitText: 'aztreonam ' + meta.atmG + ' g + avibactam ' + meta.aviG + ' g',
+          atmAviText: meta.atmG + ' g / ' + meta.aviG + ' g',
           doseText: meta.totalG + ' g',
           vialMain: fmtVial(meta.displayVials),
           fractionText: meta.fraction || '',
@@ -1244,7 +1317,7 @@
         return aboveMin && crcl <= band.max;
       }
       function crclBand(crcl) {
-        return CRCL_BANDS.find(b => inBand(crcl, b));
+        return CRCL_BANDS.find(b => inBand(roundCrcl(crcl), b));
       }
 
       /**
@@ -1252,23 +1325,38 @@
        *       mode: 'cg'|'manual'|'ihd'|'crrt', manualCrcl, effluent: '1-2'|'3-5' }
        */
       function computeEmblaveo(p) {
-        const ibw = ibwKg(p.sex, p.heightCm);
-        const cw = crclWeightKg(p.weightKg, ibw);
-        const cgCrcl = cockcroftGault(p.age, cw.kg, p.scr, p.sex);
+        p = p || {};
+        const sex = p.sex === 'female' ? 'female' : 'male';
+        const age = toFiniteNumber(p.age, 65);
+        const heightCm = toFiniteNumber(p.heightCm, 165);
+        const weightKg = toFiniteNumber(p.weightKg, 60);
+        let scr = toFiniteNumber(p.scr, 1);
+        if (!(scr > 0)) scr = 1;
+        const mode = p.mode || 'cg';
+        const manualCrcl = toFiniteNumber(p.manualCrcl, 60);
+        const effluent = p.effluent === '3-5' ? '3-5' : '1-2';
+
+        const ibw = ibwKg(sex, heightCm);
+        const cw = crclWeightKg(weightKg, ibw);
+        const cgCrcl = cockcroftGault(age, cw.kg, scr, sex);
         let usedCrcl = cgCrcl;
         let band;
         let warning = null;
         let note = '依 Cockcroft-Gault 計算，使用 ' + cw.type;
 
-        if (p.mode === 'manual') {
-          usedCrcl = p.manualCrcl;
+        if (mode === 'manual') {
+          usedCrcl = manualCrcl;
           band = crclBand(usedCrcl);
           note = '手動輸入 CrCl';
-        } else if (p.mode === 'ihd') {
-          band = CRCL_BANDS.find(b => b.key === '≤15');
-          note = '間歇性血液透析：使用 CrCl ≤ 15 方案；透析日於 HD 結束後給藥';
-        } else if (p.mode === 'crrt') {
-          const high = p.effluent === '3-5';
+        } else if (mode === 'ihd') {
+          const base15 = CRCL_BANDS.find(b => b.key === '≤15');
+          band = Object.assign({}, base15, {
+            key: 'ihd',
+            label: 'iHD（透析日於透析結束後給予）'
+          });
+          note = '間歇性血液透析：劑量與 CrCl ≤ 15 相同；透析日於 HD 結束後給藥';
+        } else if (mode === 'crrt') {
+          const high = effluent === '3-5';
           band = {
             key: high ? 'crrt-3-5' : 'crrt-1-2',
             label: high ? 'CRRT 流出液流速 3–5 L/h' : 'CRRT 流出液流速 1–2 L/h',
@@ -1277,14 +1365,10 @@
             intervalH: high ? 6 : 8,
             crrt: true
           };
-          note = 'CRRT 初始劑量依 EU SmPC Table 3（假設無殘餘腎功能）。熱病僅有個案報告。';
+          note = CRRT_OFFLABEL + '（EU SmPC Table 3，假設無殘餘腎功能）。熱病僅有個案報告。';
         } else {
           band = crclBand(usedCrcl);
           note = '依 Cockcroft-Gault 計算，使用 ' + cw.type;
-        }
-
-        if (p.mode !== 'ihd' && p.mode !== 'crrt' && band.requiresRrt) {
-          warning = 'CrCl ≤ 15 mL/min 時，除非已開始血液透析或其他腎臟替代治療，否則不應使用 aztreonam-avibactam。';
         }
 
         const loading = describeDose(band.loadingG);
@@ -1293,10 +1377,11 @@
         const consult = '建議：Emblaveo loading ' + loading.vialPhrase +
           ' IV drip 3 小時，之後 ' + maintenance.vialPhrase +
           ' q' + band.intervalH + 'h IV drip 3 小時。' +
-          (p.mode === 'ihd' ? '透析日於透析結束後給予。' : '');
-        const prep = formatPrepText(band.loadingG, band.maintG, band.intervalH, p.mode === 'ihd');
+          (mode === 'ihd' ? '透析日於透析結束後給予。' : '') +
+          (mode === 'crrt' ? CRRT_OFFLABEL + '。' : '');
+        const prep = formatPrepText(band.loadingG, band.maintG, band.intervalH, mode === 'ihd', mode === 'crrt');
         return {
-          ibw, abw: adjBwKg(ibw, p.weightKg), tbw: p.weightKg,
+          ibw, abw: adjBwKg(ibw, weightKg), tbw: weightKg,
           crclWeight: cw, cgCrcl, usedCrcl,
           band, note, warning, loading, maintenance,
           intervalH: band.intervalH, dosesPerDay, consult, prep
@@ -1308,7 +1393,7 @@
         buttons.forEach(btn => btn.setAttribute('aria-pressed', btn === active ? 'true' : 'false'));
       }
       function fmtCrcl(v) {
-        return (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, '') + ' mL/min';
+        return roundCrcl(v).toFixed(1).replace(/\.0$/, '') + ' mL/min';
       }
 
       const el = {
@@ -1330,16 +1415,19 @@
         manualField: document.getElementById('manual-field'),
         ihdField: document.getElementById('ihd-field'),
         crrtField: document.getElementById('crrt-field'),
+        crrtOfflabel: document.getElementById('crrt-offlabel'),
         crclValue: document.getElementById('crcl-value'),
         bandLabel: document.getElementById('band-label'),
         crclNote: document.getElementById('crcl-note'),
         loadRegimen: document.getElementById('load-regimen'),
         loadDose: document.getElementById('load-dose'),
+        loadTotal: document.getElementById('load-total'),
         loadSplit: document.getElementById('load-split'),
         loadVial: document.getElementById('load-vial'),
         loadFrac: document.getElementById('load-frac'),
         maintRegimen: document.getElementById('maint-regimen'),
         maintDose: document.getElementById('maint-dose'),
+        maintTotal: document.getElementById('maint-total'),
         maintSplit: document.getElementById('maint-split'),
         maintVial: document.getElementById('maint-vial'),
         maintFrac: document.getElementById('maint-frac'),
@@ -1364,8 +1452,9 @@
       let lastPrep = '';
 
       function fillDose(kind, dose) {
-        el[kind + 'Dose'].textContent = dose.doseText;
-        el[kind + 'Split'].textContent = dose.splitText;
+        el[kind + 'Dose'].textContent = dose.atmAviText;
+        el[kind + 'Total'].textContent = '合計 ' + dose.doseText;
+        el[kind + 'Split'].textContent = '';
         el[kind + 'Vial'].textContent = dose.vialMain;
         if (dose.fractionText) {
           el[kind + 'Frac'].textContent = dose.fractionText;
@@ -1388,21 +1477,23 @@
           { key: '>50', cond: 'CrCl &gt; 50', load: 2.67, maint: 2, interval: 'q6h' },
           { key: '30-50', cond: 'CrCl &gt; 30 且 ≤ 50', load: 2.67, maint: 1, interval: 'q6h' },
           { key: '15-30', cond: 'CrCl &gt; 15 且 ≤ 30', load: 1.8, maint: 0.9, interval: 'q8h' },
-          { key: '≤15', cond: 'CrCl ≤ 15 + iHD', load: 1.33, maint: 0.9, interval: 'q12h' },
-          { key: 'crrt-1-2', cond: 'CRRT 1–2 L/h', load: 1.8, maint: 0.9, interval: 'q8h' },
-          { key: 'crrt-3-5', cond: 'CRRT 3–5 L/h', load: 2.67, maint: 1, interval: 'q6h' }
+          { key: '≤15', cond: 'CrCl ≤ 15（未洗腎）', load: 1.33, maint: 0.9, interval: 'q12h' },
+          { key: 'ihd', cond: 'iHD（透析日於透析結束後給予）', load: 1.33, maint: 0.9, interval: 'q12h' },
+          { key: 'crrt-1-2', cond: 'CRRT 1–2 L/h（仿單外參考）', load: 1.8, maint: 0.9, interval: 'q8h' },
+          { key: 'crrt-3-5', cond: 'CRRT 3–5 L/h（仿單外參考）', load: 2.67, maint: 1, interval: 'q6h' }
         ];
         const cell = (g) => {
           const d = describeDose(g);
           const extra = d.fractionText ? '（' + d.fractionText + '）' : '';
-          return '<td>' + d.doseText + '<span class="table-prep">' + d.vialPhrase + extra + '</span></td>';
+          return '<td>' + d.atmAviText + '<span class="table-prep">' + d.vialPhrase + extra + '</span></td>';
         };
         const tr = rows.map(r => '<tr data-key="' + r.key + '"><th>' + r.cond + '</th>' + cell(r.load) + cell(r.maint) + '<td>' + r.interval + '</td></tr>').join('');
         el.doseTable.innerHTML =
           '<div class="table-wrap"><table class="ref-table">' +
-          '<thead><tr><th>條件</th><th>Loading</th><th>Maintenance</th><th>間隔</th></tr></thead>' +
+          '<thead><tr><th>條件</th><th>Loading (ATM/AVI)</th><th>Maintenance (ATM/AVI)</th><th>間隔</th></tr></thead>' +
           '<tbody id="dose-table-body">' + tr + '</tbody></table></div>' +
-          '<p class="table-foot">一律輸注 3 小時。支數 = 公克劑量 ÷ 2（最多兩位小數）。間隔自輸注開始時起算。</p>';
+          '<p class="table-foot">一律輸注 3 小時。表格劑量為 aztreonam / avibactam。支數 = 合計公克 ÷ 2（最多兩位小數）。間隔自輸注開始時起算。' +
+          CRRT_OFFLABEL + '。</p>';
       }
 
       function highlightTableRow(key) {
@@ -1414,12 +1505,12 @@
       function readInputs() {
         return {
           sex: state.sex,
-          age: +el.ageSlider.value,
-          heightCm: +el.heightSlider.value,
-          weightKg: +el.weightSlider.value,
-          scr: +el.scrSlider.value,
+          age: toFiniteNumber(el.ageSlider.value, 65),
+          heightCm: toFiniteNumber(el.heightSlider.value, 165),
+          weightKg: toFiniteNumber(el.weightSlider.value, 60),
+          scr: sliderPosToScr(el.scrSlider.value),
           mode: state.mode,
-          manualCrcl: +el.manualCrclSlider.value,
+          manualCrcl: toFiniteNumber(el.manualCrclSlider.value, 60),
           effluent: state.effluent
         };
       }
@@ -1429,7 +1520,7 @@
         el.ageVal.textContent = p.age;
         el.heightVal.textContent = p.heightCm;
         el.weightVal.textContent = p.weightKg;
-        el.scrVal.textContent = p.scr.toFixed(1);
+        el.scrVal.textContent = snapScr(p.scr).toFixed(2);
         el.manualCrclVal.textContent = p.manualCrcl;
         updateRangeFills();
         el.manualField.hidden = p.mode !== 'manual';
@@ -1481,7 +1572,10 @@
           alerts.push('4 小時血液透析約可清除 aztreonam 劑量的 38%、avibactam 的 55%；透析日請在 HD 結束後給藥。仿單未另外規定補充劑量。');
         }
         if (p.mode === 'crrt') {
-          alerts.push('CRRT 劑量為 EU 仿單初始建議，假設無殘餘腎功能；僅列出流出液流速 1–2 與 3–5 L/h。熱病（Sanford）僅有個案報告。');
+          el.crrtOfflabel.hidden = false;
+          alerts.push(CRRT_OFFLABEL + '。僅列出流出液流速 1–2 與 3–5 L/h（假設無殘餘腎功能）。熱病（Sanford）僅有個案報告。');
+        } else if (el.crrtOfflabel) {
+          el.crrtOfflabel.hidden = true;
         }
         if (alerts.length > 0) {
           el.alertBox.innerHTML = alerts.join('<br>');
