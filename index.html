@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#16a34a">
-  <meta name="description" content="Emblaveo（aztreonam-avibactam）腎功能劑量計算器：依 CrCl 換算 loading / maintenance 公克劑量與會診支數。">
-  <title>Emblaveo 劑量計算器 v261120F</title>
+  <meta name="description" content="Emblaveo（aztreonam-avibactam）腎功能劑量計算器：依 CrCl 換算 loading / maintenance 公克劑量與支數。">
+  <title>Emblaveo 劑量計算器 v261120G</title>
   <style>
     :root {
       --green: #16a34a;
@@ -925,35 +925,98 @@
             <p class="subtitle">Aztreonam-avibactam · 依 CrCl 調整 · 會診支數換算</p>
           </div>
         </div>
-        <span class="version-badge" aria-label="版本 v261120F">v261120F</span>
+        <span class="version-badge" aria-label="版本 v261120G">v261120G</span>
       </header>
 
       <div class="workspace">
-        <section class="controls" aria-label="腎功能參數">
-          <span class="section-label">腎功能 / 透析模式</span>
-          <div class="mode-switch three" role="group" aria-label="腎功能 / 透析模式">
-            <button type="button" id="mode-crcl" class="gender-button" aria-pressed="true">CrCl</button>
-            <button type="button" id="mode-ihd" class="gender-button" aria-pressed="false">iHD</button>
-            <button type="button" id="mode-crrt" class="gender-button" aria-pressed="false">CRRT</button>
+        <section class="controls" aria-label="病人參數">
+          <span class="section-label">生理性別 <span>（用於 IBW / CrCl）</span></span>
+          <div class="gender-switch" role="group" aria-label="生理性別">
+            <button type="button" id="btn-male" class="gender-button" aria-pressed="true">男性</button>
+            <button type="button" id="btn-female" class="gender-button" aria-pressed="false">女性</button>
           </div>
 
-          <div id="crcl-field">
-            <div class="range-field">
-              <div class="range-heading">
-                <label for="crcl-slider">CrCl</label>
-                <output class="range-value" for="crcl-slider" aria-live="polite"><span id="crcl-val">80</span><span class="unit"> mL/min</span></output>
-              </div>
-              <div class="range-control">
-                <input type="range" id="crcl-slider" min="0" max="150" value="80" step="1" aria-label="CrCl，mL/min">
-              </div>
-              <div class="range-scale" aria-hidden="true"><span>0 mL/min</span><span>150 mL/min</span></div>
+          <div class="range-field">
+            <div class="range-heading">
+              <label for="age-slider">年齡 Age</label>
+              <output class="range-value" for="age-slider" aria-live="polite"><span id="age-val">65</span><span class="unit"> 歲</span></output>
             </div>
-            <div class="band-chips" role="group" aria-label="CrCl 區間">
-              <button type="button" class="band-chip" data-crcl="80" data-band=">50">&gt; 50</button>
-              <button type="button" class="band-chip" data-crcl="40" data-band="30-50">&gt; 30–≤ 50</button>
-              <button type="button" class="band-chip" data-crcl="22" data-band="15-30">&gt; 15–≤ 30</button>
-              <button type="button" class="band-chip" data-crcl="10" data-band="≤15">≤ 15</button>
+            <div class="range-control">
+              <input type="range" id="age-slider" min="18" max="100" value="65" step="1" aria-label="年齡，歲">
             </div>
+            <div class="range-scale" aria-hidden="true"><span>18 歲</span><span>100 歲</span></div>
+          </div>
+
+          <div class="range-field">
+            <div class="range-heading">
+              <label for="height-slider">身高 Height</label>
+              <output class="range-value" for="height-slider" aria-live="polite"><span id="height-val">165</span><span class="unit"> cm</span></output>
+            </div>
+            <div class="range-control">
+              <input type="range" id="height-slider" min="140" max="200" value="165" step="1" aria-label="身高，公分">
+            </div>
+            <div class="range-scale" aria-hidden="true"><span>140 cm</span><span>200 cm</span></div>
+          </div>
+
+          <div class="range-field">
+            <div class="range-heading">
+              <label for="weight-slider">實際體重 TBW</label>
+              <output class="range-value" for="weight-slider" aria-live="polite"><span id="weight-val">60</span><span class="unit"> kg</span></output>
+            </div>
+            <div class="range-control">
+              <input type="range" id="weight-slider" min="30" max="150" value="60" step="1" aria-label="實際體重，公斤">
+            </div>
+            <div class="range-scale" aria-hidden="true"><span>30 kg</span><span>150 kg</span></div>
+          </div>
+
+          <div class="range-field">
+            <div class="range-heading">
+              <label for="scr-slider">血清肌酸酐 SCr</label>
+              <output class="range-value" for="scr-slider" aria-live="polite"><span id="scr-val">1.0</span><span class="unit"> mg/dL</span></output>
+            </div>
+            <div class="range-control">
+              <input type="range" id="scr-slider" min="0.3" max="10.0" value="1.0" step="0.1" aria-label="血清肌酸酐，mg/dL">
+            </div>
+            <div class="range-scale" aria-hidden="true"><span>0.3 mg/dL</span><span>10.0 mg/dL</span></div>
+          </div>
+
+          <div class="weight-summary" aria-label="體重參數">
+            <div class="weight-grid">
+              <div class="weight-cell">
+                <div class="weight-name">TBW</div>
+                <div class="weight-number" id="disp-tbw">60 kg</div>
+              </div>
+              <div class="weight-cell">
+                <div class="weight-name">IBW</div>
+                <div class="weight-number" id="disp-ibw">61.5 kg</div>
+              </div>
+              <div class="weight-cell">
+                <div class="weight-name">ABW</div>
+                <div class="weight-number" id="disp-abw">60.9 kg</div>
+              </div>
+            </div>
+            <div class="formula-note">IBW：Devine formula · ABW = IBW + 0.4 × (TBW − IBW)。成人劑量不依體重調整，體重僅用於計算 CrCl。</div>
+          </div>
+
+          <div class="control-block">
+            <span class="section-label">腎功能 / 透析模式</span>
+            <div class="mode-switch" role="group" aria-label="腎功能 / 透析模式">
+              <button type="button" id="mode-cg" class="gender-button" aria-pressed="true">CG 計算</button>
+              <button type="button" id="mode-manual" class="gender-button" aria-pressed="false">手動 CrCl</button>
+              <button type="button" id="mode-ihd" class="gender-button" aria-pressed="false">iHD</button>
+              <button type="button" id="mode-crrt" class="gender-button" aria-pressed="false">CRRT</button>
+            </div>
+          </div>
+
+          <div id="manual-field" class="range-field" hidden>
+            <div class="range-heading">
+              <label for="manual-crcl-slider">手動 CrCl</label>
+              <output class="range-value" for="manual-crcl-slider" aria-live="polite"><span id="manual-crcl-val">60</span><span class="unit"> mL/min</span></output>
+            </div>
+            <div class="range-control">
+              <input type="range" id="manual-crcl-slider" min="0" max="150" value="60" step="1" aria-label="手動 CrCl，mL/min">
+            </div>
+            <div class="range-scale" aria-hidden="true"><span>0 mL/min</span><span>150 mL/min</span></div>
           </div>
 
           <div id="ihd-field" hidden>
@@ -962,7 +1025,7 @@
 
           <div id="crrt-field" hidden>
             <span class="section-label">CRRT 流出液流速 effluent flow</span>
-            <div class="mode-switch" role="group" aria-label="CRRT 流出液流速">
+            <div class="mode-switch effluent-switch" role="group" aria-label="CRRT 流出液流速">
               <button type="button" id="eff-low" class="gender-button" aria-pressed="true">1–2 L/h</button>
               <button type="button" id="eff-high" class="gender-button" aria-pressed="false">3–5 L/h</button>
             </div>
@@ -971,10 +1034,10 @@
 
           <div class="crcl-display" aria-label="腎功能分級摘要">
             <div class="crcl-main">
-              <div class="crcl-number" id="crcl-value">80 mL/min</div>
+              <div class="crcl-number" id="crcl-value">62.5 mL/min</div>
               <div class="crcl-band" id="band-label">CrCl &gt; 50 mL/min</div>
             </div>
-            <p class="crcl-note" id="crcl-note">直接以 CrCl 對應仿單劑量區間</p>
+            <p class="crcl-note" id="crcl-note">依 Cockcroft-Gault 計算</p>
           </div>
         </section>
 
@@ -992,9 +1055,9 @@
                 <span class="metric-value" id="load-dose">2.67 g</span>
               </div>
               <div class="dose-metric">
-                <span class="metric-label">會診支數</span>
-                <span class="metric-value"><span id="load-vial">約 1.25</span><span class="metric-unit">支</span></span>
-                <span class="vial-exact" id="load-exact">精確 1.335 支</span>
+                <span class="metric-label">支數</span>
+                <span class="metric-value"><span id="load-vial">1.33</span><span class="metric-unit">支</span></span>
+                <span class="vial-exact" id="load-frac">約 1⅓</span>
               </div>
             </div>
             <p class="dose-sub" id="load-split">aztreonam 2 g + avibactam 0.67 g</p>
@@ -1013,9 +1076,9 @@
                 <span class="metric-value" id="maint-dose">2 g</span>
               </div>
               <div class="dose-metric">
-                <span class="metric-label">會診支數</span>
+                <span class="metric-label">支數</span>
                 <span class="metric-value"><span id="maint-vial">1</span><span class="metric-unit">支</span></span>
-                <span class="vial-exact" id="maint-exact" hidden></span>
+                <span class="vial-exact" id="maint-frac" hidden></span>
               </div>
             </div>
             <p class="dose-sub" id="maint-split">aztreonam 1.5 g + avibactam 0.5 g</p>
@@ -1033,8 +1096,9 @@
           <div id="alert-box" class="alert-box" role="status"></div>
 
           <div id="logic-notes" class="logic-notes">
-            <p>・<strong>1 vial = 2 g</strong>（aztreonam 1.5 g + avibactam 0.5 g）。會診支數四捨五入至最接近的 0.25 支；若與精確值不同，會另外標出精確支數。</p>
-            <p>・成人劑量只依 CrCl（Cockcroft-Gault）調整，不依體重或年齡。一律輸注 3 小時；maintenance 於 loading 後的下一個給藥間隔開始（間隔自輸注開始時起算）。</p>
+            <p>・<strong>1 vial = 2 g</strong>（aztreonam 1.5 g + avibactam 0.5 g）。支數以公克劑量 ÷ 2，最多顯示到小數兩位。</p>
+            <p>・每支僅限單次使用，不足 1 支仍須開整支（例如 0.45 支仍開 1 支）。</p>
+            <p>・成人劑量只依 CrCl 調整，不依體重或年齡另外加減。CrCl：Cockcroft-Gault，使用 ABW（TBW &lt; IBW 時用 TBW）。一律輸注 3 小時；maintenance 於 loading 後的下一個給藥間隔開始（間隔自輸注開始時起算）。</p>
             <p>・複雜腹腔感染若懷疑厭氧菌，應併用 metronidazole。</p>
           </div>
 
@@ -1050,8 +1114,8 @@
 
       <footer class="disclaimer">
         <p class="disclaimer-title">⚠️ 免責聲明 / Disclaimer</p>
-        <p>本工具僅供醫療專業人員參考，不能取代臨床判斷與藥師核對；給藥前請依院內規範與現行仿單確認。支數為方便會診書寫的近似換算。</p>
-        <p class="footer-version"><strong>版本：</strong>v261120F</p>
+        <p>本工具僅供醫療專業人員參考，不能取代臨床判斷與藥師核對；給藥前請依院內規範與現行仿單確認。支數依 1 vial = 2 g 換算，供會診書寫參考。</p>
+        <p class="footer-version"><strong>版本：</strong>v261120G</p>
       </footer>
 
       <noscript><div class="noscript">此計算器需要啟用 JavaScript 才能更新劑量。</div></noscript>
@@ -1063,17 +1127,17 @@
       'use strict';
 
       // ===== Emblaveo (ATM-AVI) dosing core — pure functions, no DOM =====
-      const APP_VERSION = 'v261120F';
-      const VIAL_G = 2;          // 1 vial = 2 g total (1.5 g ATM + 0.5 g AVI)
-      const VIAL_STEP = 0.25;
+      const APP_VERSION = 'v261120G';
+      const VIAL_G = 2; // 1 vial = 2 g total (1.5 g ATM + 0.5 g AVI)
 
+      // displayVials is the clean 2-decimal value used on the page (2.67/2 = 1.335 → 1.33, not 1.34)
       const DOSE = {
-        2.67: { totalG: 2.67, atmG: 2,    aviG: 0.67  },
-        2:    { totalG: 2,    atmG: 1.5,  aviG: 0.5   },
-        1.8:  { totalG: 1.8,  atmG: 1.35, aviG: 0.45  },
-        1.33: { totalG: 1.33, atmG: 1,    aviG: 0.33  },
-        1:    { totalG: 1,    atmG: 0.75, aviG: 0.25  },
-        0.9:  { totalG: 0.9,  atmG: 0.675,aviG: 0.225 }
+        2.67: { totalG: 2.67, atmG: 2,     aviG: 0.67,  displayVials: 1.33, fraction: '約 1⅓' },
+        2:    { totalG: 2,    atmG: 1.5,   aviG: 0.5,   displayVials: 1 },
+        1.8:  { totalG: 1.8,  atmG: 1.35,  aviG: 0.45,  displayVials: 0.9 },
+        1.33: { totalG: 1.33, atmG: 1,     aviG: 0.33,  displayVials: 0.67, fraction: '約 ⅔' },
+        1:    { totalG: 1,    atmG: 0.75,  aviG: 0.25,  displayVials: 0.5 },
+        0.9:  { totalG: 0.9,  atmG: 0.675, aviG: 0.225, displayVials: 0.45 }
       };
 
       const CRCL_BANDS = [
@@ -1083,30 +1147,36 @@
         { key: '≤15', min: -Infinity, exclusiveMin: false, max: 15, label: 'CrCl ≤ 15 mL/min（須配合間歇性血液透析）', loadingG: 1.33, maintG: 0.9, intervalH: 12, requiresRrt: true }
       ];
 
-      function exactVials(totalG) { return totalG / VIAL_G; }
-      function roundedVials(totalG) {
-        return Math.round(exactVials(totalG) / VIAL_STEP + 1e-9) * VIAL_STEP;
+      function ibwKg(sex, heightCm) {
+        return (sex === 'female' ? 45.5 : 50) + 0.91 * (heightCm - 152.4);
       }
+      function adjBwKg(ibw, tbw) { return ibw + 0.4 * (tbw - ibw); }
+      function crclWeightKg(tbw, ibw) {
+        return tbw < ibw ? { kg: tbw, type: 'TBW' } : { kg: adjBwKg(ibw, tbw), type: 'ABW' };
+      }
+      function cockcroftGault(age, weightKg, scr, sex) {
+        const v = ((140 - age) * weightKg) / (72 * scr);
+        return sex === 'female' ? v * 0.85 : v;
+      }
+      function exactVials(totalG) { return totalG / VIAL_G; }
       function fmtVial(v) {
-        const n = Math.round(v * 1000) / 1000;
+        const n = Math.round(v * 100) / 100;
         return String(n);
       }
       function describeDose(totalG) {
         const meta = DOSE[totalG];
         if (!meta) throw new Error('Unknown dose ' + totalG);
         const exact = exactVials(totalG);
-        const rounded = roundedVials(totalG);
-        const differs = Math.abs(exact - rounded) > 1e-9;
+        const opened = Math.ceil(meta.displayVials - 1e-9);
         return {
           ...meta,
           exact,
-          rounded,
-          differs,
+          opened,
           splitText: 'aztreonam ' + meta.atmG + ' g + avibactam ' + meta.aviG + ' g',
           doseText: meta.totalG + ' g',
-          vialMain: (differs ? '約 ' : '') + fmtVial(rounded),
-          vialExactText: differs ? '精確 ' + fmtVial(exact) + ' 支' : '',
-          vialPhrase: differs ? '約 ' + fmtVial(rounded) + ' 支' : fmtVial(rounded) + ' 支'
+          vialMain: fmtVial(meta.displayVials),
+          fractionText: meta.fraction || '',
+          vialPhrase: fmtVial(meta.displayVials) + ' 支'
         };
       }
       function inBand(crcl, band) {
@@ -1118,13 +1188,23 @@
       }
 
       /**
-       * p = { mode: 'crcl'|'ihd'|'crrt', crcl, effluent: '1-2'|'3-5' }
+       * p = { sex, age, heightCm, weightKg, scr,
+       *       mode: 'cg'|'manual'|'ihd'|'crrt', manualCrcl, effluent: '1-2'|'3-5' }
        */
       function computeEmblaveo(p) {
+        const ibw = ibwKg(p.sex, p.heightCm);
+        const cw = crclWeightKg(p.weightKg, ibw);
+        const cgCrcl = cockcroftGault(p.age, cw.kg, p.scr, p.sex);
+        let usedCrcl = cgCrcl;
         let band;
         let warning = null;
-        let note = '直接以 CrCl 對應仿單劑量區間';
-        if (p.mode === 'ihd') {
+        let note = '依 Cockcroft-Gault 計算，使用 ' + cw.type;
+
+        if (p.mode === 'manual') {
+          usedCrcl = p.manualCrcl;
+          band = crclBand(usedCrcl);
+          note = '手動輸入 CrCl';
+        } else if (p.mode === 'ihd') {
           band = CRCL_BANDS.find(b => b.key === '≤15');
           note = '間歇性血液透析：使用 CrCl ≤ 15 方案；透析日於 HD 結束後給藥';
         } else if (p.mode === 'crrt') {
@@ -1139,20 +1219,25 @@
           };
           note = 'CRRT 初始劑量依 EU SmPC Table 3（假設無殘餘腎功能）。熱病僅有個案報告。';
         } else {
-          band = crclBand(p.crcl);
-          if (band.requiresRrt) {
-            warning = 'CrCl ≤ 15 mL/min 時，除非已開始血液透析或其他腎臟替代治療，否則不應使用 aztreonam-avibactam。';
-          }
+          band = crclBand(usedCrcl);
+          note = '依 Cockcroft-Gault 計算，使用 ' + cw.type;
         }
+
+        if (p.mode !== 'ihd' && p.mode !== 'crrt' && band.requiresRrt) {
+          warning = 'CrCl ≤ 15 mL/min 時，除非已開始血液透析或其他腎臟替代治療，否則不應使用 aztreonam-avibactam。';
+        }
+
         const loading = describeDose(band.loadingG);
         const maintenance = describeDose(band.maintG);
         const dosesPerDay = 24 / band.intervalH;
-        const dailyVials = maintenance.rounded * dosesPerDay;
-        const consult = '建議：Emblaveo loading ' + loading.doseText + '（' + loading.vialPhrase +
-          '）IV drip 3 小時，之後 ' + maintenance.doseText + '（' + maintenance.vialPhrase +
-          '）q' + band.intervalH + 'h IV drip 3 小時。' +
+        const dailyVials = maintenance.displayVials * dosesPerDay;
+        const consult = '建議：Emblaveo loading ' + loading.doseText +
+          ' IV drip 3 小時，之後 ' + maintenance.doseText +
+          ' q' + band.intervalH + 'h IV drip 3 小時。' +
           (p.mode === 'ihd' ? '透析日於透析結束後給予。' : '');
         return {
+          ibw, abw: adjBwKg(ibw, p.weightKg), tbw: p.weightKg,
+          crclWeight: cw, cgCrcl, usedCrcl,
           band, note, warning, loading, maintenance,
           intervalH: band.intervalH, dosesPerDay, dailyVials, consult
         };
@@ -1162,12 +1247,27 @@
       function setGroupPressed(buttons, active) {
         buttons.forEach(btn => btn.setAttribute('aria-pressed', btn === active ? 'true' : 'false'));
       }
-      function fmtCrcl(v) { return v + ' mL/min'; }
+      function fmtCrcl(v) {
+        return (Math.round(v * 10) / 10).toFixed(1).replace(/\.0$/, '') + ' mL/min';
+      }
 
       const el = {
-        crclSlider: document.getElementById('crcl-slider'),
-        crclVal: document.getElementById('crcl-val'),
-        crclField: document.getElementById('crcl-field'),
+        btnMale: document.getElementById('btn-male'),
+        btnFemale: document.getElementById('btn-female'),
+        ageSlider: document.getElementById('age-slider'),
+        heightSlider: document.getElementById('height-slider'),
+        weightSlider: document.getElementById('weight-slider'),
+        scrSlider: document.getElementById('scr-slider'),
+        manualCrclSlider: document.getElementById('manual-crcl-slider'),
+        ageVal: document.getElementById('age-val'),
+        heightVal: document.getElementById('height-val'),
+        weightVal: document.getElementById('weight-val'),
+        scrVal: document.getElementById('scr-val'),
+        manualCrclVal: document.getElementById('manual-crcl-val'),
+        dispTbw: document.getElementById('disp-tbw'),
+        dispIbw: document.getElementById('disp-ibw'),
+        dispAbw: document.getElementById('disp-abw'),
+        manualField: document.getElementById('manual-field'),
         ihdField: document.getElementById('ihd-field'),
         crrtField: document.getElementById('crrt-field'),
         crclValue: document.getElementById('crcl-value'),
@@ -1177,12 +1277,12 @@
         loadDose: document.getElementById('load-dose'),
         loadSplit: document.getElementById('load-split'),
         loadVial: document.getElementById('load-vial'),
-        loadExact: document.getElementById('load-exact'),
+        loadFrac: document.getElementById('load-frac'),
         maintRegimen: document.getElementById('maint-regimen'),
         maintDose: document.getElementById('maint-dose'),
         maintSplit: document.getElementById('maint-split'),
         maintVial: document.getElementById('maint-vial'),
-        maintExact: document.getElementById('maint-exact'),
+        maintFrac: document.getElementById('maint-frac'),
         maintDaily: document.getElementById('maint-daily'),
         consultText: document.getElementById('consult-text'),
         copyBtn: document.getElementById('copy-btn'),
@@ -1192,37 +1292,33 @@
         effHigh: document.getElementById('eff-high')
       };
       const modeButtons = {
-        crcl: document.getElementById('mode-crcl'),
+        cg: document.getElementById('mode-cg'),
+        manual: document.getElementById('mode-manual'),
         ihd: document.getElementById('mode-ihd'),
         crrt: document.getElementById('mode-crrt')
       };
-      const bandChips = [...document.querySelectorAll('.band-chip')];
 
-      const state = { mode: 'crcl', effluent: '1-2' };
+      const state = { sex: 'male', mode: 'cg', effluent: '1-2' };
       let lastConsult = '';
 
       function fillDose(kind, dose) {
         el[kind + 'Dose'].textContent = dose.doseText;
         el[kind + 'Split'].textContent = dose.splitText;
         el[kind + 'Vial'].textContent = dose.vialMain;
-        if (dose.differs) {
-          el[kind + 'Exact'].textContent = dose.vialExactText;
-          el[kind + 'Exact'].hidden = false;
+        if (dose.fractionText) {
+          el[kind + 'Frac'].textContent = dose.fractionText;
+          el[kind + 'Frac'].hidden = false;
         } else {
-          el[kind + 'Exact'].textContent = '';
-          el[kind + 'Exact'].hidden = true;
+          el[kind + 'Frac'].textContent = '';
+          el[kind + 'Frac'].hidden = true;
         }
       }
 
-      function updateRangeFill() {
-        const slider = el.crclSlider;
-        const min = +slider.min, max = +slider.max, val = +slider.value;
-        slider.style.setProperty('--range-progress', ((val - min) / (max - min) * 100) + '%');
-      }
-
-      function syncBandChips(crcl, mode) {
-        const key = mode === 'crcl' ? (crclBand(crcl) || {}).key : null;
-        bandChips.forEach(btn => btn.setAttribute('aria-pressed', btn.getAttribute('data-band') === key ? 'true' : 'false'));
+      function updateRangeFills() {
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+          const min = +slider.min, max = +slider.max, val = +slider.value;
+          slider.style.setProperty('--range-progress', ((val - min) / (max - min) * 100) + '%');
+        });
       }
 
       function buildDoseTable() {
@@ -1236,7 +1332,7 @@
         ];
         const cell = (g) => {
           const d = describeDose(g);
-          const extra = d.differs ? '（' + fmtVial(d.exact) + '）' : '';
+          const extra = d.fractionText ? '（' + d.fractionText + '）' : '';
           return '<td>' + d.doseText + '<span class="table-prep">' + d.vialPhrase + extra + '</span></td>';
         };
         const tr = rows.map(r => '<tr data-key="' + r.key + '"><th>' + r.cond + '</th>' + cell(r.load) + cell(r.maint) + '<td>' + r.interval + '</td></tr>').join('');
@@ -1244,7 +1340,7 @@
           '<div class="table-wrap"><table class="ref-table">' +
           '<thead><tr><th>條件</th><th>Loading</th><th>Maintenance</th><th>間隔</th></tr></thead>' +
           '<tbody id="dose-table-body">' + tr + '</tbody></table></div>' +
-          '<p class="table-foot">一律輸注 3 小時。支數四捨五入至 0.25 支。間隔自輸注開始時起算。</p>';
+          '<p class="table-foot">一律輸注 3 小時。支數 = 公克劑量 ÷ 2（最多兩位小數）。間隔自輸注開始時起算。</p>';
       }
 
       function highlightTableRow(key) {
@@ -1253,43 +1349,70 @@
         [...body.rows].forEach(row => row.classList.toggle('is-active', row.getAttribute('data-key') === key));
       }
 
-      function update() {
-        const crcl = +el.crclSlider.value;
-        el.crclVal.textContent = crcl;
-        updateRangeFill();
-        el.crclField.hidden = state.mode !== 'crcl';
-        el.ihdField.hidden = state.mode !== 'ihd';
-        el.crrtField.hidden = state.mode !== 'crrt';
-        syncBandChips(crcl, state.mode);
+      function readInputs() {
+        return {
+          sex: state.sex,
+          age: +el.ageSlider.value,
+          heightCm: +el.heightSlider.value,
+          weightKg: +el.weightSlider.value,
+          scr: +el.scrSlider.value,
+          mode: state.mode,
+          manualCrcl: +el.manualCrclSlider.value,
+          effluent: state.effluent
+        };
+      }
 
-        const r = computeEmblaveo({ mode: state.mode, crcl, effluent: state.effluent });
-        if (state.mode === 'ihd') {
+      function update() {
+        const p = readInputs();
+        el.ageVal.textContent = p.age;
+        el.heightVal.textContent = p.heightCm;
+        el.weightVal.textContent = p.weightKg;
+        el.scrVal.textContent = p.scr.toFixed(1);
+        el.manualCrclVal.textContent = p.manualCrcl;
+        updateRangeFills();
+        el.manualField.hidden = p.mode !== 'manual';
+        el.ihdField.hidden = p.mode !== 'ihd';
+        el.crrtField.hidden = p.mode !== 'crrt';
+
+        const r = computeEmblaveo(p);
+        el.dispTbw.textContent = r.tbw.toFixed(0) + ' kg';
+        el.dispIbw.textContent = r.ibw.toFixed(1) + ' kg';
+        el.dispAbw.textContent = r.abw.toFixed(1) + ' kg';
+
+        if (p.mode === 'ihd') {
           el.crclValue.textContent = 'iHD';
           el.bandLabel.textContent = r.band.label;
-        } else if (state.mode === 'crrt') {
+          el.crclNote.textContent = r.note + '（CG CrCl ' + fmtCrcl(r.cgCrcl) + '，僅供參考）';
+        } else if (p.mode === 'crrt') {
           el.crclValue.textContent = r.band.label.replace('CRRT 流出液流速 ', '');
           el.bandLabel.textContent = 'CRRT';
-        } else {
-          el.crclValue.textContent = fmtCrcl(crcl);
+          el.crclNote.textContent = r.note + '（CG CrCl ' + fmtCrcl(r.cgCrcl) + '，僅供參考）';
+        } else if (p.mode === 'manual') {
+          el.crclValue.textContent = fmtCrcl(r.usedCrcl);
           el.bandLabel.textContent = r.band.label;
+          el.crclNote.textContent = r.note + '（CG 計算值 ' + fmtCrcl(r.cgCrcl) + '）';
+        } else {
+          el.crclValue.textContent = fmtCrcl(r.usedCrcl);
+          el.bandLabel.textContent = r.band.label;
+          el.crclNote.textContent = r.note + '（' + r.crclWeight.kg.toFixed(1) + ' kg）';
         }
-        el.crclNote.textContent = r.note;
 
         el.loadRegimen.textContent = '輸注 3 小時 · 維持劑量於 ' + r.intervalH + ' 小時後開始';
         fillDose('load', r.loading);
         el.maintRegimen.textContent = '輸注 3 小時 · 每 ' + r.intervalH + ' 小時';
         fillDose('maint', r.maintenance);
-        el.maintDaily.textContent = '每日維持劑量共 ' + (r.maintenance.totalG * r.dosesPerDay) + ' g（' + r.dosesPerDay + ' 劑），約 ' + fmtVial(r.dailyVials) + ' 支。';
+        el.maintDaily.textContent = '每日維持劑量共 ' + fmtVial(r.maintenance.totalG * r.dosesPerDay) +
+          ' g（' + r.dosesPerDay + ' 劑），共 ' + fmtVial(r.dailyVials) + ' 支。';
         lastConsult = r.consult;
         el.consultText.textContent = r.consult;
         el.copyBtn.textContent = '複製';
 
         const alerts = [];
         if (r.warning) alerts.push(r.warning);
-        if (state.mode === 'ihd') {
+        if (p.mode === 'ihd') {
           alerts.push('4 小時血液透析約可清除 aztreonam 劑量的 38%、avibactam 的 55%；透析日請在 HD 結束後給藥。仿單未另外規定補充劑量。');
         }
-        if (state.mode === 'crrt') {
+        if (p.mode === 'crrt') {
           alerts.push('CRRT 劑量為 EU 仿單初始建議，假設無殘餘腎功能；僅列出流出液流速 1–2 與 3–5 L/h。熱病（Sanford）僅有個案報告。');
         }
         if (alerts.length > 0) {
@@ -1302,6 +1425,16 @@
         highlightTableRow(r.band.key);
       }
 
+      el.btnMale.addEventListener('click', () => {
+        state.sex = 'male';
+        setGroupPressed([el.btnMale, el.btnFemale], el.btnMale);
+        update();
+      });
+      el.btnFemale.addEventListener('click', () => {
+        state.sex = 'female';
+        setGroupPressed([el.btnMale, el.btnFemale], el.btnFemale);
+        update();
+      });
       Object.entries(modeButtons).forEach(([mode, btn]) => {
         btn.addEventListener('click', () => {
           state.mode = mode;
@@ -1319,16 +1452,10 @@
         setGroupPressed([el.effLow, el.effHigh], el.effHigh);
         update();
       });
-      bandChips.forEach(btn => {
-        btn.addEventListener('click', () => {
-          state.mode = 'crcl';
-          setGroupPressed(Object.values(modeButtons), modeButtons.crcl);
-          el.crclSlider.value = btn.getAttribute('data-crcl');
-          update();
-        });
+      [el.ageSlider, el.heightSlider, el.weightSlider, el.scrSlider, el.manualCrclSlider].forEach(slider => {
+        slider.addEventListener('input', update, { passive: true });
+        slider.addEventListener('change', update);
       });
-      el.crclSlider.addEventListener('input', update, { passive: true });
-      el.crclSlider.addEventListener('change', update);
       el.copyBtn.addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(lastConsult);
