@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#16a34a">
   <meta name="description" content="Emblaveo（aztreonam-avibactam）腎功能劑量計算器：依 CrCl 換算 loading / maintenance 公克劑量與支數。">
-  <title>Emblaveo 劑量計算器 v261120I</title>
+  <title>Emblaveo 劑量計算器 v261120J</title>
   <style>
     :root {
       --green: #16a34a;
@@ -895,6 +895,7 @@
       font-size: 14px;
       line-height: 1.65;
       font-weight: 650;
+      white-space: pre-line;
     }
     .table-prep { display: block; margin-top: 2px; color: var(--muted); font-size: 11.5px; font-weight: 650; }
     .mode-note {
@@ -932,7 +933,7 @@
             <p class="subtitle">Aztreonam-avibactam · 依 CrCl 調整 · 會診支數換算</p>
           </div>
         </div>
-        <span class="version-badge" aria-label="版本 v261120I">v261120I</span>
+        <span class="version-badge" aria-label="版本 v261120J">v261120J</span>
       </header>
 
       <div class="workspace">
@@ -1099,6 +1100,14 @@
             <p class="consult-text" id="consult-text"></p>
           </div>
 
+          <div class="consult-box">
+            <div class="consult-kicker">
+              <span>泡製方法</span>
+              <button type="button" class="copy-btn" id="copy-prep-btn">複製</button>
+            </div>
+            <p class="consult-text" id="prep-text"></p>
+          </div>
+
           <div id="alert-box" class="alert-box" role="status"></div>
 
           <div id="logic-notes" class="logic-notes">
@@ -1114,6 +1123,7 @@
             <p class="references-title"><strong>參考資料 References</strong></p>
             <p>1. EMA. Emblaveo EPAR Product Information（SmPC）Table 1–3。<a href="https://www.ema.europa.eu/en/documents/product-information/emblaveo-epar-product-information_en.pdf" target="_blank" rel="noopener">EMA PDF</a></p>
             <p>2. Sanford Guide（熱病）aztreonam-avibactam 腎功能劑量，作為交叉核對；公克劑量與間隔與 EU 仿單相同。CRRT 於熱病僅有個案報告，本頁 CRRT 仍依 EU SmPC Table 3。</p>
+            <p>3. 台灣仿單第 3.2 節調製方式（表 2 抽取量）。配製以 10 mL 注射用水復溶後濃度為 ATM 131.2 mg/mL；本頁預設加入 NS 100 mL（最終濃度落在仿單 1.5–40 mg/mL 範圍內）。</p>
           </div>
         </section>
       </div>
@@ -1121,7 +1131,7 @@
       <footer class="disclaimer">
         <p class="disclaimer-title">⚠️ 免責聲明 / Disclaimer</p>
         <p>本工具僅供醫療專業人員參考，不能取代臨床判斷與藥師核對；給藥前請依院內規範與現行仿單確認。支數依 1 vial = 2 g 換算，供會診書寫參考。</p>
-        <p class="footer-version"><strong>版本：</strong>v261120I</p>
+        <p class="footer-version"><strong>版本：</strong>v261120J</p>
       </footer>
 
       <noscript><div class="noscript">此計算器需要啟用 JavaScript 才能更新劑量。</div></noscript>
@@ -1133,7 +1143,7 @@
       'use strict';
 
       // ===== Emblaveo (ATM-AVI) dosing core — pure functions, no DOM =====
-      const APP_VERSION = 'v261120I';
+      const APP_VERSION = 'v261120J';
       const VIAL_G = 2; // 1 vial = 2 g total (1.5 g ATM + 0.5 g AVI)
 
       // displayVials is the clean 2-decimal value used on the page (2.67/2 = 1.335 → 1.33, not 1.34)
@@ -1145,6 +1155,43 @@
         1:    { totalG: 1,    atmG: 0.75,  aviG: 0.25,  displayVials: 0.5 },
         0.9:  { totalG: 0.9,  atmG: 0.675, aviG: 0.225, displayVials: 0.45 }
       };
+
+      // Taiwan 仿單 3.2 / 表 2 withdraw volumes after 10 mL SWFI (ATM 131.2 mg/mL).
+      // 1.33 g (1000 mg ATM) is not listed; 1000 ÷ 131.2 = 7.6 mL (1 decimal).
+      const PREP = {
+        2.67: { withdrawMl: 15.2, vials: 2, listed: true,  split: [11.4, 3.8] },
+        2:    { withdrawMl: 11.4, vials: 1, listed: true },
+        1.8:  { withdrawMl: 10.3, vials: 1, listed: true },
+        1.33: { withdrawMl: 7.6,  vials: 1, listed: false },
+        1:    { withdrawMl: 5.7,  vials: 1, listed: true },
+        0.9:  { withdrawMl: 5.1,  vials: 1, listed: true }
+      };
+      const ATM_MG_PER_ML = 131.2;
+      const BAG_ML = 100;
+
+      function formatDosePrep(kind, totalG, intervalH) {
+        const p = PREP[totalG];
+        if (!p) throw new Error('Unknown prep dose ' + totalG);
+        const label = kind === 'loading' ? 'Loading：' : 'Maintenance：';
+        const interval = kind === 'maintenance' ? ' q' + intervalH + 'h' : '';
+        if (p.vials === 2) {
+          return label + '取 2 支，每支注入注射用水 10 mL 輕搖溶解，共抽 ' + p.withdrawMl +
+            ' mL（第 1 支 ' + p.split[0] + ' mL + 第 2 支 ' + p.split[1] +
+            ' mL），加入 NS 100 mL，IV drip 3 小時' + interval + '。';
+        }
+        const almostFull = p.withdrawMl === 11.4 ? '（近乎全量）' : '';
+        return label + '取 1 支，注入注射用水 10 mL 輕搖溶解，抽 ' + p.withdrawMl +
+          ' mL' + almostFull + '，加入 NS 100 mL，IV drip 3 小時' + interval + '。';
+      }
+
+      function formatPrepText(loadingG, maintG, intervalH, afterHd) {
+        let text = '泡製：\n' +
+          formatDosePrep('loading', loadingG, intervalH) + '\n' +
+          formatDosePrep('maintenance', maintG, intervalH) + '\n' +
+          '注意：泡製到加入輸液袋須在 30 分鐘內完成；每支限單次使用，剩餘丟棄。';
+        if (afterHd) text += '透析日於透析結束後給予。';
+        return text;
+      }
 
       const CRCL_BANDS = [
         { key: '>50', min: 50, exclusiveMin: true, max: Infinity, label: 'CrCl > 50 mL/min', loadingG: 2.67, maintG: 2, intervalH: 6 },
@@ -1245,11 +1292,12 @@
           ' IV drip 3 小時，之後 ' + maintenance.vialPhrase +
           ' q' + band.intervalH + 'h IV drip 3 小時。' +
           (p.mode === 'ihd' ? '透析日於透析結束後給予。' : '');
+        const prep = formatPrepText(band.loadingG, band.maintG, band.intervalH, p.mode === 'ihd');
         return {
           ibw, abw: adjBwKg(ibw, p.weightKg), tbw: p.weightKg,
           crclWeight: cw, cgCrcl, usedCrcl,
           band, note, warning, loading, maintenance,
-          intervalH: band.intervalH, dosesPerDay, consult
+          intervalH: band.intervalH, dosesPerDay, consult, prep
         };
       }
       // ===== end Emblaveo dosing core
@@ -1295,6 +1343,8 @@
         maintFrac: document.getElementById('maint-frac'),
         consultText: document.getElementById('consult-text'),
         copyBtn: document.getElementById('copy-btn'),
+        prepText: document.getElementById('prep-text'),
+        copyPrepBtn: document.getElementById('copy-prep-btn'),
         alertBox: document.getElementById('alert-box'),
         doseTable: document.getElementById('dose-table'),
         effLow: document.getElementById('eff-low'),
@@ -1309,6 +1359,7 @@
 
       const state = { sex: 'male', mode: 'cg', effluent: '1-2' };
       let lastConsult = '';
+      let lastPrep = '';
 
       function fillDose(kind, dose) {
         el[kind + 'Dose'].textContent = dose.doseText;
@@ -1418,6 +1469,9 @@
         lastConsult = r.consult;
         el.consultText.textContent = r.consult;
         el.copyBtn.textContent = '複製';
+        lastPrep = r.prep;
+        el.prepText.textContent = r.prep;
+        el.copyPrepBtn.textContent = '複製';
 
         const alerts = [];
         if (r.warning) alerts.push(r.warning);
@@ -1468,21 +1522,26 @@
         slider.addEventListener('input', update, { passive: true });
         slider.addEventListener('change', update);
       });
-      el.copyBtn.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(lastConsult);
-          el.copyBtn.textContent = '已複製';
-        } catch (err) {
-          const area = document.createElement('textarea');
-          area.value = lastConsult;
-          document.body.appendChild(area);
-          area.select();
-          document.execCommand('copy');
-          area.remove();
-          el.copyBtn.textContent = '已複製';
-        }
-        setTimeout(() => { el.copyBtn.textContent = '複製'; }, 1600);
-      });
+      function bindCopy(btn, getText) {
+        btn.addEventListener('click', async () => {
+          const text = getText();
+          try {
+            await navigator.clipboard.writeText(text);
+            btn.textContent = '已複製';
+          } catch (err) {
+            const area = document.createElement('textarea');
+            area.value = text;
+            document.body.appendChild(area);
+            area.select();
+            document.execCommand('copy');
+            area.remove();
+            btn.textContent = '已複製';
+          }
+          setTimeout(() => { btn.textContent = '複製'; }, 1600);
+        });
+      }
+      bindCopy(el.copyBtn, () => lastConsult);
+      bindCopy(el.copyPrepBtn, () => lastPrep);
 
       document.documentElement.dataset.appVersion = APP_VERSION;
       buildDoseTable();
