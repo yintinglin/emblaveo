@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light">
   <meta name="theme-color" content="#16a34a">
   <meta name="description" content="Emblaveo（aztreonam-avibactam）腎功能劑量計算器：依 CrCl 換算 loading / maintenance 公克劑量與支數。">
-  <title>Emblaveo 劑量計算器 v261120G</title>
+  <title>Emblaveo 劑量計算器 v261120H</title>
   <style>
     :root {
       --green: #16a34a;
@@ -925,7 +925,7 @@
             <p class="subtitle">Aztreonam-avibactam · 依 CrCl 調整 · 會診支數換算</p>
           </div>
         </div>
-        <span class="version-badge" aria-label="版本 v261120G">v261120G</span>
+        <span class="version-badge" aria-label="版本 v261120H">v261120H</span>
       </header>
 
       <div class="workspace">
@@ -1082,7 +1082,6 @@
               </div>
             </div>
             <p class="dose-sub" id="maint-split">aztreonam 1.5 g + avibactam 0.5 g</p>
-            <p class="dose-daily" id="maint-daily"></p>
           </article>
 
           <div class="consult-box">
@@ -1115,7 +1114,7 @@
       <footer class="disclaimer">
         <p class="disclaimer-title">⚠️ 免責聲明 / Disclaimer</p>
         <p>本工具僅供醫療專業人員參考，不能取代臨床判斷與藥師核對；給藥前請依院內規範與現行仿單確認。支數依 1 vial = 2 g 換算，供會診書寫參考。</p>
-        <p class="footer-version"><strong>版本：</strong>v261120G</p>
+        <p class="footer-version"><strong>版本：</strong>v261120H</p>
       </footer>
 
       <noscript><div class="noscript">此計算器需要啟用 JavaScript 才能更新劑量。</div></noscript>
@@ -1127,7 +1126,7 @@
       'use strict';
 
       // ===== Emblaveo (ATM-AVI) dosing core — pure functions, no DOM =====
-      const APP_VERSION = 'v261120G';
+      const APP_VERSION = 'v261120H';
       const VIAL_G = 2; // 1 vial = 2 g total (1.5 g ATM + 0.5 g AVI)
 
       // displayVials is the clean 2-decimal value used on the page (2.67/2 = 1.335 → 1.33, not 1.34)
@@ -1230,16 +1229,15 @@
         const loading = describeDose(band.loadingG);
         const maintenance = describeDose(band.maintG);
         const dosesPerDay = 24 / band.intervalH;
-        const dailyVials = maintenance.displayVials * dosesPerDay;
-        const consult = '建議：Emblaveo loading ' + loading.doseText +
-          ' IV drip 3 小時，之後 ' + maintenance.doseText +
+        const consult = '建議：Emblaveo loading ' + loading.vialPhrase +
+          ' IV drip 3 小時，之後 ' + maintenance.vialPhrase +
           ' q' + band.intervalH + 'h IV drip 3 小時。' +
           (p.mode === 'ihd' ? '透析日於透析結束後給予。' : '');
         return {
           ibw, abw: adjBwKg(ibw, p.weightKg), tbw: p.weightKg,
           crclWeight: cw, cgCrcl, usedCrcl,
           band, note, warning, loading, maintenance,
-          intervalH: band.intervalH, dosesPerDay, dailyVials, consult
+          intervalH: band.intervalH, dosesPerDay, consult
         };
       }
       // ===== end Emblaveo dosing core
@@ -1283,7 +1281,6 @@
         maintSplit: document.getElementById('maint-split'),
         maintVial: document.getElementById('maint-vial'),
         maintFrac: document.getElementById('maint-frac'),
-        maintDaily: document.getElementById('maint-daily'),
         consultText: document.getElementById('consult-text'),
         copyBtn: document.getElementById('copy-btn'),
         alertBox: document.getElementById('alert-box'),
@@ -1401,8 +1398,6 @@
         fillDose('load', r.loading);
         el.maintRegimen.textContent = '輸注 3 小時 · 每 ' + r.intervalH + ' 小時';
         fillDose('maint', r.maintenance);
-        el.maintDaily.textContent = '每日維持劑量共 ' + fmtVial(r.maintenance.totalG * r.dosesPerDay) +
-          ' g（' + r.dosesPerDay + ' 劑），共 ' + fmtVial(r.dailyVials) + ' 支。';
         lastConsult = r.consult;
         el.consultText.textContent = r.consult;
         el.copyBtn.textContent = '複製';
